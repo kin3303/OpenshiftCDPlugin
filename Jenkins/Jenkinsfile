@@ -1,0 +1,8 @@
+node {
+    stage('buildImage') {
+        openshiftBuild(buildConfig: 'web01', showBuildLogs: 'true')
+    }
+    stage('deployApplication') {
+        openshiftDeploy(deploymentConfig: 'web01')
+    }
+}

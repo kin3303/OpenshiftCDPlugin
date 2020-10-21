@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "..\\Openshift"
+		},
+		{
+			"path": "..\\Jenkins"
+		}
+	],
+	"settings": {}
+}

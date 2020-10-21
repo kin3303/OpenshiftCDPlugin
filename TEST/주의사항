@@ -1,0 +1,52 @@
+* 복사한 프로시저를 또 복사하면 Flow UI 에서 Parameter 가 안나타남
+
+* StartBuild / Deploy Sattic Resouces 프로시저는 아래와 같이 파라미터를 남김 
+    Import Microservices 프로시저 복사후 아래 항목을 남기면 됨
+        clusterName
+        envName
+        envProjectName
+        osTemplateYaml
+        templateParamValues
+
+
+* StartBuild / Deploy Sattic Resouces 프로시저저의 ec_parameterForm 은 아래와 같이 수정할 것
+<editor>
+    <formElement>
+        <type>textarea</type>
+        <label>OpenShift Template Content (YAML File)</label>
+        <property>osTemplateYaml</property>
+        <required>1</required>
+        <documentation>Content of an OpenShift template (YAML file) containing related services and deployments definitions.</documentation>
+    </formElement>
+    <formElement>
+        <type>textarea</type>
+        <label>Template Parameter Values:</label>
+        <property>templateParamValues</property>
+        <required>0</required>
+        <documentation>Template parameter values to use. Format "paramName1=value1, paramName2=value2"</documentation>
+    </formElement>
+    <formElement>
+        <type>project</type>
+        <label>Environment Project Name:</label>
+        <property>envProjectName</property>
+        <required>0</required>
+        <documentation>(Optional) The project containing the Environment where the services will be deployed.</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Environment Name:</label>
+        <property>envName</property>
+        <required>0</required>
+        <documentation>(Optional) The name of an existing environment that contains a cluster where the newly created microservice(s) will be deployed.</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Cluster Name:</label>
+        <property>clusterName</property>
+        <required>0</required>
+        <documentation>(Optional) The name of the existing CloudBees CD cluster representing a OpenShift cluster in the environment above where the newly created microservice(s) will be deployed.</documentation>
+    </formElement>
+</editor>
+
+* createAndAttachCredential.pl 은 코드가 틀렸고 ec-groovy 를 ec-perl 로 바꿔야 하며 
+  plugin 에 추가로 프로시저가 Config Credential 을 필요로 한다면  여기에 Procedure/Step 정보를 포함해 주어야 함 
