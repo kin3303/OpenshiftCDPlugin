@@ -7,7 +7,7 @@ public class OpenShiftClient extends KubernetesClient {
 
     def getRoutes(String clusterEndpoint, String namespace, String accessToken) {
         println clusterEndpoint
-        def response = doHttpGet(clusterEndpoint, "/oapi/v1/namespaces/${namespace}/routes", accessToken, true)
+        def response = doHttpGet(clusterEndpoint, "/apis/route.openshift.io/v1/namespaces/${namespace}/routes", accessToken, true)
         logger DEBUG, "Routes: ${response}"
         return response?.data?.items
     }
@@ -21,7 +21,7 @@ public class OpenShiftClient extends KubernetesClient {
         }
 
         def response = doHttpGet(clusterEndpoint,
-                "/oapi/v1/namespaces/${namespace}/routes/${routeName}",
+                "/apis/route.openshift.io/v1/namespaces/${namespace}/routes/${routeName}",
                 accessToken, /*failOnErrorCode*/ false)
         if (response.status == 200){
             logger INFO, "Route $routeName found in $namespace, updating route ..."
@@ -46,8 +46,8 @@ public class OpenShiftClient extends KubernetesClient {
         doHttpRequest(createRoute ? POST : PUT,
                 clusterEndpoint,
                 createRoute?
-                        "/oapi/v1/namespaces/${namespace}/routes" :
-                        "/oapi/v1/namespaces/${namespace}/routes/${routeName}",
+                        "/apis/route.openshift.io/v1/namespaces/${namespace}/routes" :
+                        "/apis/route.openshift.io/v1/namespaces/${namespace}/routes/${routeName}",
                 ['Authorization' : accessToken],
                 /*failOnErrorCode*/ true,
                 payload)
@@ -58,7 +58,7 @@ public class OpenShiftClient extends KubernetesClient {
         def json = new JsonBuilder()
         def result = json{
             kind "Route"
-            apiVersion "v1"
+            apiVersion "route.openshift.io/v1"
             metadata {
                 name routeName
             }
@@ -140,7 +140,7 @@ public class OpenShiftClient extends KubernetesClient {
         }
 
         def response = doHttpGet(clusterEndpoint,
-                "/oapi/v1/namespaces/${namespace}/routes/${routeName}",
+                "/apis/route.openshift.io/v1/namespaces/${namespace}/routes/${routeName}",
                 accessToken, /*failOnErrorCode*/ false)
 
         if (response.status == 200){
@@ -153,7 +153,7 @@ public class OpenShiftClient extends KubernetesClient {
 
                 doHttpRequest(DELETE,
                         clusterEndpoint,
-                        "/oapi/v1/namespaces/${namespace}/routes/${routeName}",
+                        "/apis/route.openshift.io/v1/namespaces/${namespace}/routes/${routeName}",
                         ['Authorization' : accessToken],
                         /*failOnErrorCode*/ true)
             }
@@ -179,9 +179,8 @@ public class OpenShiftClient extends KubernetesClient {
         return (new JsonBuilder(result))
     }
 
-
     def getDeploymentConfigs(String clusterEndPoint, String namespace, String accessToken, parameters = [:]) {
-        def path = "/oapi/v1/namespaces/${namespace}/deploymentconfigs"
+        def path = "/apis/apps.openshift.io/v1/namespaces/${namespace}/deploymentconfigs"
         def response = doHttpGet(clusterEndPoint,
             path,
             accessToken, /*failOnErrorCode*/ false, null)

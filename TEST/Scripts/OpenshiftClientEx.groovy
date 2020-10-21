@@ -26,7 +26,9 @@ public class OpenshiftClientEx extends KubernetesClient {
                     return
                 }
 
-                def response = doHttpGet(clusterEndpoint, "/oapi/v1/namespaces/${namespace}/${resourceTypeName}/${resName}",accessToken, false) 
+                def apiPath = checkAPIPath(resourceTypeName,res)
+
+                def response = doHttpGet(clusterEndpoint, "/${apiPath}/${namespace}/${resourceTypeName}/${resName}",accessToken, false) 
                 if (response.status == 200) { 
                     logger INFO, "The ${resourceTypeName} $resName found in $namespace, updating ${resourceTypeName} ..."
                     applyResouce(response.data, resourceTypeName, resName, clusterEndpoint, namespace, res, accessToken)
@@ -43,7 +45,6 @@ public class OpenshiftClientEx extends KubernetesClient {
     def applyResouce(def existingRes, String resourceTypeName, String resourceName, String clusterEndpoint, String namespace, def resource, String accessToken) {
         def payload = existingRes
 
-        resource.apiVersion = 'v1'
         if (payload) { 
             payload =  new JsonBuilder(mergeObjs(payload, resource))
              logger INFO, "Updating ${resourceTypeName} : \n${payload.toPrettyString()}\n"
