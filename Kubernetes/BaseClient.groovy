@@ -1,7 +1,4 @@
-//
-//BaseClient
-//
-@Grab('org.codehaus.groovy.modules.http-builder:http-builder:0.7.1' )
+// @Grab('org.codehaus.groovy.modules.http-builder:http-builder:0.7.1' )
 
 import groovy.json.JsonBuilder
 import groovy.json.JsonOutput
@@ -25,10 +22,8 @@ import static Logger.*
  */
 public class BaseClient {
 
-    Object doHttpRequest(Method method, 
-                         String requestUrl,
-                         String requestUri, 
-                         def requestHeaders,
+    Object doHttpRequest(Method method, String requestUrl,
+                         String requestUri, def requestHeaders,
                          boolean failOnErrorCode = true,
                          Object requestBody = null,
                          def queryArgs = null) {
@@ -161,5 +156,3 @@ public class BaseClient {
     final boolean OFFLINE = false
 
 }
-
-

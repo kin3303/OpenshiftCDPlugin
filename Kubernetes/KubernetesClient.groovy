@@ -15,7 +15,6 @@ import static com.jayway.jsonpath.JsonPath.parse
  */
 public class KubernetesClient extends BaseClient {
 
-    EFClient efClient = null
     String kubernetesVersion = '1.6'
 
     String retrieveAccessToken(def pluginConfig) {
@@ -49,8 +48,6 @@ public class KubernetesClient extends BaseClient {
             String environmentName,
             String resultsPropertySheet,
             String serviceEntityRevisionId = null) {
-
-        this.efClient = efClient
 
         def serviceDetails = efClient.getServiceDeploymentDetails(
                 serviceName,
@@ -620,11 +617,6 @@ public class KubernetesClient extends BaseClient {
             //if it does not already include it.
             if (svcContainer.registryUri) {
                 String image = svcContainer.imageName
-
-                if (image.startsWith('$[') && efClient != null) {
-                    image = efClient.getEFProperty(image, true)?.value
-                }
-
                 if (!image.startsWith("${svcContainer.registryUri}/")) {
                     svcContainer.imageName = "${svcContainer.registryUri}/$image"
                 }
