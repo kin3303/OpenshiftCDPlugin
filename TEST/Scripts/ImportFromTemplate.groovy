@@ -251,6 +251,30 @@ public class ImportFromTemplate extends EFClient {
         updateJobSummary(lines.join("\n"), /*jobStepSummary*/ true)
     }
 
+     def setPropertyInExistingMicroservice(String projectName, String applicationName, String serviceName, String propertyName, String value) { 
+        def payload = [:] 
+        payload << [
+            value: value,
+            projectName: projectName,
+            applicationName: applicationName,
+            serviceName: serviceName
+        ]
+        payload = JsonOutput.toJson(payload)
+ 
+        doHttpPut("/rest/v1.0/properties/${propertyName}", payload)
+    }   
+
+     def getPropertyInExistingMicroservice(String projectName, String applicationName, String serviceName, String propertyName) { 
+ 
+        def result=getEFProperty("/projects/${projectName}/applications/${applicationName}/services/${serviceName}/${propertyName}", /*ignoreError*/ true)
+
+        print result.property.value
+
+        def mapPayload = new JsonSlurper().parseText(new String(result.property.value))
+
+        return mapPayload
+    }   
+
     def createOrUpdateService(projectName, envProjectName, envName, clusterName, efServices, service, String applicationName = null) {
         def existingService = efServices.find { s ->
             equalNames(s.serviceName, service.service.serviceName)
@@ -306,7 +330,12 @@ public class ImportFromTemplate extends EFClient {
                 createOrUpdateMapping(projectName, envProjectName, envName, clusterName, serviceName, service, applicationName)
             }
         }
- 
+
+        if(applicationName) {
+            setPropertyInExistingMicroservice(projectName, applicationName, service.service.serviceName, "Menifest",new JsonBuilder(service).toPrettyString())
+            getPropertyInExistingMicroservice(projectName, applicationName, service.service.serviceName, "Menifest")
+        }
+        
         result
     }
 
@@ -953,7 +982,9 @@ public class ImportFromTemplate extends EFClient {
                 livenessPeriod = kubeContainer.livenessProbe?.periodSeconds
                 processedLivenessFields << 'initialDelaySeconds'
                 processedLivenessFields << 'periodSeconds'
-                if (probe.httpHeaders?.size() > 1) {
+                
+                def probeHeaderSize = probe?.httpHeaders?.size()
+                if (probeHeaderSize && probeHeaderSize > 1) {
                     logger WARNING, 'Only one liveness header is supported, will take the first'
                 }
                 def header = probe?.httpHeaders?.first()

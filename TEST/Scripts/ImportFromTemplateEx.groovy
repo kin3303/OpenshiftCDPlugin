@@ -69,14 +69,14 @@ public class ImportFromTemplateEx extends EFClient  {
             resourcesMap['clusterresourcequotas'] = clusterresourcequotas
         }
 
-        def clusterresourcequotas = getParsedResouce("Secret", parsedList)
-        if(clusterresourcequotas) { 
-            resourcesMap['secrets'] = clusterresourcequotas
+        def secrets = getParsedResouce("Secret", parsedList)
+        if(secrets) { 
+            resourcesMap['secrets'] = secrets
         }
 
-        def clusterresourcequotas = getParsedResouce("ConfigMap", parsedList)
-        if(clusterresourcequotas) { 
-            resourcesMap['configmaps'] = clusterresourcequotas
+        def configmaps = getParsedResouce("ConfigMap", parsedList)
+        if(configmaps) { 
+            resourcesMap['configmaps'] = configmaps
         }
 
         return resourcesMap
