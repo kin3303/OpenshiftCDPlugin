@@ -397,6 +397,8 @@ public class ImportFromTemplate extends EFClient {
             if (applicationName){
                 payload.serviceName = "${serviceName}"
                 payload.serviceClusterMappingName = "${clusterName}-${serviceName}"
+
+                logger INFO, pretty(payload)
                 result = createAppServiceClusterMapping(projName, applicationName, envMapName, payload)
                 logger INFO, "Created Service Cluster Mapping for ${serviceName} in application ${applicationName} and ${clusterName}"
                 serviceClusterMappingName = result.serviceClusterMapping.serviceClusterMappingName

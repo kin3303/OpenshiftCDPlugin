@@ -66,7 +66,7 @@ public class OpenshiftClientEx extends KubernetesClient {
 
     String checkAPIPath(String resourceTypeName, def resource) {
         if(resource.apiVersion == 'v1') {
-             return "oapi/v1/namespaces"
+             return "api/v1/namespaces"
         } else {
             return "apis/${resource.apiVersion}/namespaces"
         }
