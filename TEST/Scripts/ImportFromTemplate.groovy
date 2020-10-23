@@ -307,7 +307,7 @@ public class ImportFromTemplate extends EFClient {
             }
         }
 
-        saveDeploymentToServiceProperty(projectName, applicationName, service.service.serviceName)
+        saveDeploymentsToServiceObject(projectName, applicationName, service.service.serviceName)
         
         result
     }
@@ -1126,10 +1126,10 @@ public class ImportFromTemplate extends EFClient {
         return name
     }
 
-//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-//  DUKIM-ADDED
-//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-     def setPropertyInExistingMicroservice(String projectName, String applicationName, String serviceName, String propertyName, String value) { 
+    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    //  DUKIM-ADDED
+    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
+     def setPropertyToServiceObject(String projectName, String applicationName, String serviceName, String propertyName, String value) { 
         def payload = [:] 
         payload << [
             value: value,
@@ -1142,20 +1142,11 @@ public class ImportFromTemplate extends EFClient {
         doHttpPut("/rest/v1.0/properties/${propertyName}", payload)
     }   
 
-     def getPropertyInExistingMicroservice(String projectName, String applicationName, String serviceName, String propertyName) { 
- 
-        def result=getEFProperty("/projects/${projectName}/applications/${applicationName}/services/${serviceName}/${propertyName}", /*ignoreError*/ true)
-        print result.property.value
-        def mapPayload = new JsonSlurper().parseText(new String(result.property.value))
-        return mapPayload
-    }
-
-    def saveDeploymentToServiceProperty(String projectName, String applicationName, String serviceName) {
+    def saveDeploymentsToServiceObject(String projectName, String applicationName, String serviceName) {
         if(applicationName) { 
             parsedConfigList.each { config ->
                 if (config.kind in ['Deployment','DeploymentConfig']){
-                    setPropertyInExistingMicroservice(projectName, applicationName, serviceName, config.metadata.name ,new JsonBuilder(config).toPrettyString())
-                    getPropertyInExistingMicroservice(projectName, applicationName, service.service.serviceName, config.metadata.name)
+                    setPropertyToServiceObject(projectName, applicationName, serviceName, config.metadata.name ,new JsonBuilder(config).toPrettyString())
                 }
             }
         }
