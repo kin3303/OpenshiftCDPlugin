@@ -1403,4 +1403,13 @@ public class KubernetesClient extends BaseClient {
     String makeNameDNS1035Compliant(String name){
         return formatName(name).replaceAll('\\.', '-')
     }
+
+    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    //  DUKIM-ADDED
+    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
+     def getPropertyFromService(String projectName, String applicationName, String serviceName, String propertyName) { 
+        def result=getEFProperty("/projects/${projectName}/applications/${applicationName}/services/${serviceName}/${propertyName}", /*ignoreError*/ true)
+        def mapPayload = new JsonSlurper().parseText(new String(result.data.property.value))
+        return mapPayload
+    }
 }

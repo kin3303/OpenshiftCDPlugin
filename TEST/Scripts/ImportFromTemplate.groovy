@@ -334,10 +334,7 @@ public class ImportFromTemplate extends EFClient {
             }
         }
 
-        if(applicationName) {
-            setPropertyInExistingMicroservice(projectName, applicationName, service.service.serviceName, "Menifest",new JsonBuilder(service).toPrettyString())
-            getPropertyInExistingMicroservice(projectName, applicationName, service.service.serviceName, "Menifest")
-        }
+        saveDeploymentsToServiceObject(projectName, applicationName, service.service.serviceName)
         
         result
     }
@@ -1169,8 +1166,34 @@ public class ImportFromTemplate extends EFClient {
         return name
     }
 
+    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    //  DUKIM-ADDED
+    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
     def createServiceMapDetails2(projName, serviceName, envMapName, serviceClusterMapName, payload, appName) {
         def result = doRestPost("/rest/${REST_VERSION}/projects/${projName}/applications/${appName}/tierMaps/${envMapName}/serviceClusterMappings/${serviceClusterMapName}/serviceMapDetails", payload, false)
         result?.data
+    }
+
+   def setPropertyToServiceObject(String projectName, String applicationName, String serviceName, String propertyName, String value) { 
+        def payload = [:] 
+        payload << [
+            value: value,
+            projectName: projectName,
+            applicationName: applicationName,
+            serviceName: serviceName
+        ]
+        payload = JsonOutput.toJson(payload)
+ 
+        doHttpPut("/rest/v1.0/properties/${propertyName}", payload)
+    }   
+
+    def saveDeploymentsToServiceObject(String projectName, String applicationName, String serviceName) {
+        if(applicationName) { 
+            parsedConfigList.each { config ->
+                if (config.kind in ['Deployment','DeploymentConfig']){
+                    setPropertyToServiceObject(projectName, applicationName, serviceName, config.metadata.name ,new JsonBuilder(config).toPrettyString())
+                }
+            }
+        } 
     }
 }
