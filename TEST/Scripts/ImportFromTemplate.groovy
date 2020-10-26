@@ -268,11 +268,10 @@ public class ImportFromTemplate extends EFClient {
  
         def result=getEFProperty("/projects/${projectName}/applications/${applicationName}/services/${serviceName}/${propertyName}", /*ignoreError*/ true)
 
-        print result.property.value
+        print result
+        //def mapPayload = new JsonSlurper().parseText(new String(result.property.value))
 
-        def mapPayload = new JsonSlurper().parseText(new String(result.property.value))
-
-        return mapPayload
+        return result
     }   
 
     def createOrUpdateService(projectName, envProjectName, envName, clusterName, efServices, service, String applicationName = null) {
@@ -319,7 +318,9 @@ public class ImportFromTemplate extends EFClient {
                 mapContainerPorts(projectName, serviceName, container, service, applicationName)
             }
             if (service.serviceMapping && envProjectName && envName && clusterName) {
+                println '-------->testPoint1'
                 createOrUpdateMapping(projectName, envProjectName, envName, clusterName, serviceName, service, applicationName)
+                println '<--------testPoint1'
             }
 
             if (applicationName) {
@@ -327,7 +328,9 @@ public class ImportFromTemplate extends EFClient {
             }
         } else {
             if (service.serviceMapping && envProjectName && envName && clusterName) {
+                println  '-------->testPoint2'
                 createOrUpdateMapping(projectName, envProjectName, envName, clusterName, serviceName, service, applicationName)
+                println '<--------testPoint2'
             }
         }
 
@@ -447,22 +450,35 @@ public class ImportFromTemplate extends EFClient {
             if (container.mapping) {
                 def actualParameters = []
                 container.mapping.each {k, v ->
-                    if (v) {
+                    if (v) { 
                         actualParameters.add(
                             [actualParameterName: k, value: v]
                         )
                     }
                 }
                 payload.actualParameter = actualParameters
+                //logger INFO, 'createServiceMapDetails Parameters:'
+                //logger INFO, pretty(payload)
             }
-            createServiceMapDetails(
-                projName,
-                serviceName,
-                envMapName,
-                serviceClusterMappingName,
-                payload,
-                applicationName
-            )
+            if(applicationName){
+                createServiceMapDetails2(
+                    projName,
+                    serviceName,
+                    envMapName,
+                    serviceClusterMappingName,
+                    payload,
+                    applicationName
+                )
+            } else {
+                createServiceMapDetails(
+                    projName,
+                    serviceName,
+                    envMapName,
+                    serviceClusterMappingName,
+                    payload,
+                    applicationName
+                )              
+            }
         }
     }
 
@@ -982,7 +998,7 @@ public class ImportFromTemplate extends EFClient {
                 livenessPeriod = kubeContainer.livenessProbe?.periodSeconds
                 processedLivenessFields << 'initialDelaySeconds'
                 processedLivenessFields << 'periodSeconds'
-                
+
                 def probeHeaderSize = probe?.httpHeaders?.size()
                 if (probeHeaderSize && probeHeaderSize > 1) {
                     logger WARNING, 'Only one liveness header is supported, will take the first'
@@ -1153,4 +1169,8 @@ public class ImportFromTemplate extends EFClient {
         return name
     }
 
+    def createServiceMapDetails2(projName, serviceName, envMapName, serviceClusterMapName, payload, appName) {
+        def result = doRestPost("/rest/${REST_VERSION}/projects/${projName}/applications/${appName}/tierMaps/${envMapName}/serviceClusterMappings/${serviceClusterMapName}/serviceMapDetails", payload, false)
+        result?.data
+    }
 }
