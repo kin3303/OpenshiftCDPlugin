@@ -318,9 +318,7 @@ public class ImportFromTemplate extends EFClient {
                 mapContainerPorts(projectName, serviceName, container, service, applicationName)
             }
             if (service.serviceMapping && envProjectName && envName && clusterName) {
-                println '-------->testPoint1'
                 createOrUpdateMapping(projectName, envProjectName, envName, clusterName, serviceName, service, applicationName)
-                println '<--------testPoint1'
             }
 
             if (applicationName) {
@@ -953,10 +951,17 @@ public class ImportFromTemplate extends EFClient {
                 registryUri: getRegistryUri(kubeContainer.image) ?: null
             ]
         ]
-
+        println '-------->testPoint1'
         container.env = kubeContainer.env?.collect {
-            [environmentVariableName: it.name, value: it.value]
+            if(it.value) {
+                [environmentVariableName: it.name, value: it.value]
+            } else if(it.valueFrom) {
+                def valueString = new JsonBuilder(it.valueFrom).toString()
+                println "VALUESTRING ${valueString}"
+                [environmentVariableName: it.name, value: valueString]
+            }
         }
+        println '<--------testPoint1'
 
         if (kubeContainer.command) {
             def entryPoint = kubeContainer.command.join(',')
