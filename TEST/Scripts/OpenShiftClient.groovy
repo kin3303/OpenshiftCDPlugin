@@ -334,23 +334,35 @@ public class OpenShiftClient extends KubernetesClient {
                             if(getServiceParameter(svcContainer, 'livenessHttpProbePath') && getServiceParameter(svcContainer, 'livenessHttpProbePort')){
                                 def httpHeaderName = getServiceParameter(svcContainer, 'livenessHttpProbeHttpHeaderName')
                                 def httpHeaderValue = getServiceParameter(svcContainer, 'livenessHttpProbeHttpHeaderValue')
-                                if(httpHeaderName && httpHeaderValue){
+                                def livenessCommand = getServiceParameter(svcContainer, 'livenessCommand') 
+                                def livenessFailureThreshold = getServiceParameter(svcContainer, 'livenessFailureThreshold')
+                                def livenessSuccessThreshold = getServiceParameter(svcContainer, 'livenessSuccessThreshold') 
+                                def livenessTimeoutSeconds = getServiceParameter(svcContainer, 'livenessTimeoutSeconds')
+                                def livenessInitialDelay = getServiceParameter(svcContainer, 'livenessInitialDelay')
+                                def livenessPeriod = getServiceParameter(svcContainer, 'livenessPeriod')
+ 
+                                if(!livenessCommand && httpHeaderName && httpHeaderValue){
                                     def httpHeader = [name:"", value: ""]
-                                    livenessProbe = [httpGet:[path:"", port:"", httpHeaders:[httpHeader]]]
+                                    livenessProbe = [httpGet:[path:"", port:"", httpHeaders:[httpHeader]], ]
                                     livenessProbe.httpGet.path = getServiceParameter(svcContainer, 'livenessHttpProbePath')
                                     livenessProbe.httpGet.port = (getServiceParameter(svcContainer, 'livenessHttpProbePort')).toInteger()
                                     httpHeader.name = httpHeaderName
                                     httpHeader.value = httpHeaderValue
-                                } else {
+                                } else if(!livenessCommand) {
                                     livenessProbe = [httpGet:[path:"", port:""]]
                                     livenessProbe.httpGet.path = getServiceParameter(svcContainer, 'livenessHttpProbePath')
                                     livenessProbe.httpGet.port = (getServiceParameter(svcContainer, 'livenessHttpProbePort')).toInteger()
+                                } else {
+                                    livenessProbe = [exec: [command:[:]]]
+                                    livenessProbe.exec.command = ["${livenessCommand}"] 
                                 }
 
-                                def livenessInitialDelay = getServiceParameter(svcContainer, 'livenessInitialDelay')
                                 livenessProbe.initialDelaySeconds = livenessInitialDelay.toInteger()
-                                def livenessPeriod = getServiceParameter(svcContainer, 'livenessPeriod')
                                 livenessProbe.periodSeconds = livenessPeriod.toInteger()
+                                livenessProbe.failureThreshold = livenessFailureThreshold.toInteger()
+                                livenessProbe.successThreshold = livenessSuccessThreshold.toInteger()
+                                livenessProbe.timeoutSeconds = livenessTimeoutSeconds.toInteger()
+
                             } else {
                                 livenessProbe = null
                             }

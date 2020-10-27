@@ -998,8 +998,29 @@ public class ImportFromTemplate extends EFClient {
                 livenessHttpProbePort = probe?.port
                 livenessInitialDelay = kubeContainer.livenessProbe?.initialDelaySeconds
                 livenessPeriod = kubeContainer.livenessProbe?.periodSeconds
+                def command = kubeContainer.livenessProbe?.command
+                livenessCommand = command?.first()
+                if (command?.size() > 1) {
+                    logger WARNING, 'Only one liveness command is supported'
+                }
+                livenessFailureThreshold = kubeContainer.livenessProbe?.failureThreshold
+                if(!livenessFailureThreshold) {
+                    livenessFailureThreshold = 3
+                }
+                livenessSuccessThreshold = kubeContainer.livenessProbe?.successThreshold
+                if(!livenessSuccessThreshold) {
+                    livenessSuccessThreshold = 1
+                }
+                livenessTimeoutSeconds = kubeContainer.livenessProbe?.timeoutSeconds
+                if(!livenessTimeoutSeconds) {
+                    livenessTimeoutSeconds = 1
+                }
+ 
                 processedLivenessFields << 'initialDelaySeconds'
                 processedLivenessFields << 'periodSeconds'
+                processedLivenessFields << 'failureThreshold'
+                processedLivenessFields << 'successThreshold'
+                processedLivenessFields << 'timeoutSeconds'
 
                 def probeHeaderSize = probe?.httpHeaders?.size()
                 if (probeHeaderSize && probeHeaderSize > 1) {
@@ -1028,6 +1049,9 @@ public class ImportFromTemplate extends EFClient {
                 processedFields << 'periodSeconds'
                 readinessInitialDelay = kubeContainer.readinessProbe?.initialDelaySeconds
                 readinessPeriod = kubeContainer.readinessProbe?.periodSeconds
+
+                //TODO
+
             }
 
             kubeContainer.readinessProbe?.each { k, v ->
