@@ -326,9 +326,7 @@ public class ImportFromTemplate extends EFClient {
             }
         } else {
             if (service.serviceMapping && envProjectName && envName && clusterName) {
-                println  '-------->testPoint2'
                 createOrUpdateMapping(projectName, envProjectName, envName, clusterName, serviceName, service, applicationName)
-                println '<--------testPoint2'
             }
         }
 
