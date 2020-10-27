@@ -206,4 +206,255 @@ public class OpenShiftClient extends KubernetesClient {
         response.status == 200 ? response.data : null
     }
 
+    String buildDeploymentPayload(def args, def existingDeployment, def imagePullSecretsList){
+
+        if (!args.defaultCapacity) {
+            args.defaultCapacity = 1
+        }
+
+        def deploymentStrategy = getDeploymentStrategy(args)
+        println new JsonBuilder(args).toPrettyString()
+
+        def json = new JsonBuilder()
+        //Get the message calculation out of the way
+        def replicaCount
+        def maxSurgeValue
+        def maxUnavailableValue
+        boolean isCanary = isCanaryDeployment(args)
+
+        if (isCanary) {
+            replicaCount = getServiceParameter(args, 'numberOfCanaryReplicas', 1).toInteger()
+            maxSurgeValue = 1
+            maxUnavailableValue = 1
+        } else {
+            if (deploymentStrategy && deploymentStrategy == 'rollingDeployment') {
+                def minAvailabilityCount = getServiceParameter(args, 'minAvailabilityCount')
+                def minAvailabilityPercentage = getServiceParameter(args, 'minAvailabilityPercentage')
+                def maxRunningCount = getServiceParameter(args, 'maxRunningCount')
+                def maxRunningPercentage = getServiceParameter(args, 'maxRunningPercentage')
+
+                if (!(minAvailabilityPercentage as boolean ^ minAvailabilityCount as boolean)) {
+                    throw new PluginException("Either minAvailabilityCount or minAvailabilityPercentage must be set")
+                }
+                if (!(maxRunningPercentage as boolean ^ maxRunningCount as boolean)) {
+                    throw new PluginException("Either maxRunningCount or maxRunningPercentage must be set")
+                }
+
+                replicaCount = args.defaultCapacity.toInteger()
+                maxSurgeValue = maxRunningCount ? maxRunningCount.toInteger() : "${maxRunningPercentage.toInteger() + 100}%"
+
+                if (minAvailabilityCount) {
+                    maxUnavailableValue = args.defaultCapacity.toInteger() - minAvailabilityCount.toInteger()
+                }
+                else {
+                    maxUnavailableValue = "${100 - minAvailabilityPercentage.toInteger()}%"
+                }
+            }
+            else {
+
+                replicaCount = args.defaultCapacity.toInteger()
+                maxSurgeValue = args.maxCapacity ? (args.maxCapacity.toInteger() - args.defaultCapacity.toInteger()) : 1
+                maxUnavailableValue =  args.minCapacity ?
+                    (args.defaultCapacity.toInteger() - args.minCapacity.toInteger()) : 1
+            }
+
+        }
+
+        def volumeData = convertVolumes(args.volumes)
+        def serviceName = getServiceNameToUseForDeployment(args)
+        def deploymentName = getDeploymentName(args)
+        def selectorLabel = getSelectorLabelForDeployment(args, serviceName, isCanary)
+
+        String apiPath = versionSpecificAPIPath('deployments')
+        int deploymentTimeoutInSec = getServiceParameter(args, 'deploymentTimeoutInSec', 120).toInteger()
+
+        def deploymentFlag = isCanary ? 'canary' : 'stable'
+
+        def result = json {
+            kind "Deployment"
+            apiVersion apiPath
+            metadata {
+                name deploymentName
+            }
+            spec {
+                replicas replicaCount
+                progressDeadlineSeconds deploymentTimeoutInSec
+                strategy {
+                    rollingUpdate {
+                        maxUnavailable maxUnavailableValue
+                        maxSurge maxSurgeValue
+                    }
+                }
+                selector {
+                    matchLabels {
+                        "ec-svc" selectorLabel
+                        "ec-track" deploymentFlag
+                    }
+                }
+                template {
+                    metadata {
+                        name deploymentName
+                        labels {
+                            "ec-svc" selectorLabel
+                            "ec-track" deploymentFlag
+                        }
+                    }
+                    spec{
+                        containers(args.container.collect { svcContainer ->
+                            def limits = [:]
+                            if (svcContainer.memoryLimit) {
+                                limits.memory = "${svcContainer.memoryLimit}M"
+                            }
+                            if (svcContainer.cpuLimit) {
+                                Integer cpu = convertCpuToMilliCpu(svcContainer.cpuLimit.toFloat())
+                                limits.cpu = "${cpu}m"
+                            }
+
+                            def requests = [:]
+                            if (svcContainer.memorySize) {
+                                requests.memory = "${svcContainer.memorySize}M"
+                            }
+                            if (svcContainer.cpuCount) {
+                                Integer cpu = convertCpuToMilliCpu(svcContainer.cpuCount.toFloat())
+                                requests.cpu = "${cpu}m"
+                            }
+
+                            def containerResources = [:]
+                            if (limits) {
+                                containerResources.limits = limits
+                            }
+                            if (requests) {
+                                containerResources.requests = requests
+                            }
+
+                            // Liveness Probe
+                            def livenessProbe = [:]
+                            if(getServiceParameter(svcContainer, 'livenessHttpProbePath') && getServiceParameter(svcContainer, 'livenessHttpProbePort')){
+                                def httpHeaderName = getServiceParameter(svcContainer, 'livenessHttpProbeHttpHeaderName')
+                                def httpHeaderValue = getServiceParameter(svcContainer, 'livenessHttpProbeHttpHeaderValue')
+                                def livenessCommand = getServiceParameter(svcContainer, 'livenessCommand') 
+                                def livenessFailureThreshold = getServiceParameter(svcContainer, 'livenessFailureThreshold')
+                                def livenessSuccessThreshold = getServiceParameter(svcContainer, 'livenessSuccessThreshold') 
+                                def livenessTimeoutSeconds = getServiceParameter(svcContainer, 'livenessTimeoutSeconds')
+                                def livenessInitialDelay = getServiceParameter(svcContainer, 'livenessInitialDelay')
+                                def livenessPeriod = getServiceParameter(svcContainer, 'livenessPeriod')
+ 
+                                if(!livenessCommand && httpHeaderName && httpHeaderValue){
+                                    def httpHeader = [name:"", value: ""]
+                                    livenessProbe = [httpGet:[path:"", port:"", httpHeaders:[httpHeader]], ]
+                                    livenessProbe.httpGet.path = getServiceParameter(svcContainer, 'livenessHttpProbePath')
+                                    livenessProbe.httpGet.port = (getServiceParameter(svcContainer, 'livenessHttpProbePort')).toInteger()
+                                    httpHeader.name = httpHeaderName
+                                    httpHeader.value = httpHeaderValue
+                                } else if(!livenessCommand) {
+                                    livenessProbe = [httpGet:[path:"", port:""]]
+                                    livenessProbe.httpGet.path = getServiceParameter(svcContainer, 'livenessHttpProbePath')
+                                    livenessProbe.httpGet.port = (getServiceParameter(svcContainer, 'livenessHttpProbePort')).toInteger()
+                                } else {
+                                    livenessProbe = [exec: [command:[:]]]
+                                    livenessProbe.exec.command = ["${livenessCommand}"] 
+                                }
+
+                                livenessProbe.initialDelaySeconds = livenessInitialDelay.toInteger()
+                                livenessProbe.periodSeconds = livenessPeriod.toInteger()
+                                livenessProbe.failureThreshold = livenessFailureThreshold.toInteger()
+                                livenessProbe.successThreshold = livenessSuccessThreshold.toInteger()
+                                livenessProbe.timeoutSeconds = livenessTimeoutSeconds.toInteger()
+
+                            } else {
+                                livenessProbe = null
+                            }
+
+                            // Readiness Probe
+                            def readinessProbe = [:]
+                            if(getServiceParameter(svcContainer, 'readinessHttpProbePath') && getServiceParameter(svcContainer, 'readinessHttpProbePort')){
+                                def httpHeaderName = getServiceParameter(svcContainer, 'readinessHttpProbeHttpHeaderName')
+                                def httpHeaderValue = getServiceParameter(svcContainer, 'readinessHttpProbeHttpHeaderValue')
+                                def readinessCommand = getServiceParameter(svcContainer, 'readinessCommand') 
+                                def readinessFailureThreshold = getServiceParameter(svcContainer, 'readinessFailureThreshold')
+                                def readinessSuccessThreshold = getServiceParameter(svcContainer, 'readinessSuccessThreshold') 
+                                def readinessTimeoutSeconds = getServiceParameter(svcContainer, 'readinessTimeoutSeconds')
+                                def readinessInitialDelay = getServiceParameter(svcContainer, 'readinessInitialDelay')
+                                def readinessPeriod = getServiceParameter(svcContainer, 'readinessPeriod')
+ 
+                                if(!readinessCommand && httpHeaderName && httpHeaderValue){
+                                    def httpHeader = [name:"", value: ""]
+                                    readinessProbe = [httpGet:[path:"", port:"", httpHeaders:[httpHeader]], ]
+                                    readinessProbe.httpGet.path = getServiceParameter(svcContainer, 'readinessHttpProbePath')
+                                    readinessProbe.httpGet.port = (getServiceParameter(svcContainer, 'readinessHttpProbePort')).toInteger()
+                                    httpHeader.name = httpHeaderName
+                                    httpHeader.value = httpHeaderValue
+                                } else if(!readinessCommand) {
+                                    readinessProbe = [httpGet:[path:"", port:""]]
+                                    readinessProbe.httpGet.path = getServiceParameter(svcContainer, 'readinessHttpProbePath')
+                                    readinessProbe.httpGet.port = (getServiceParameter(svcContainer, 'readinessHttpProbePort')).toInteger()
+                                } else {
+                                    readinessProbe = [exec: [command:[:]]]
+                                    readinessProbe.exec.command = ["${readinessCommand}"] 
+                                }
+
+                                readinessProbe.initialDelaySeconds = readinessInitialDelay.toInteger()
+                                readinessProbe.periodSeconds = readinessPeriod.toInteger()
+                                readinessProbe.failureThreshold = readinessFailureThreshold.toInteger()
+                                readinessProbe.successThreshold = readinessSuccessThreshold.toInteger()
+                                readinessProbe.timeoutSeconds = readinessTimeoutSeconds.toInteger()
+                            } else {
+                                readinessProbe = null
+                            }
+
+                            [
+                                    name: formatName(svcContainer.containerName),
+                                    image: "${svcContainer.imageName}:${svcContainer.imageVersion?:'latest'}",
+                                    command: svcContainer.entryPoint?.split(','),
+                                    args: svcContainer.command?.split(','),
+                                    livenessProbe: livenessProbe,
+                                    readinessProbe: readinessProbe,
+                                    ports: svcContainer.port?.collect { port ->
+                                        [
+                                                name: formatName(port.portName),
+                                                containerPort: port.containerPort.toInteger(),
+                                                protocol: "TCP"
+                                        ]
+                                    },
+                                    volumeMounts: (parseJsonToList(svcContainer.volumeMounts)).collect { mount ->
+                                                        [
+                                                            name: formatName(mount.name),
+                                                            mountPath: mount.mountPath
+                                                        ]
+
+                                        },
+                                    env: svcContainer.environmentVariable?.collect { envVar ->
+                                        if(envVar.value.contains('secretKeyRef') || envVar.value.contains('configMapRef')) {
+                                            [
+                                                name: envVar.environmentVariableName,
+                                                valueFrom: new JsonSlurper().parseText(envVar.value)
+                                            ]
+                                        } else {
+                                            [
+                                                name: envVar.environmentVariableName,
+                                                value: envVar.value
+                                            ]
+                                        }
+                                    },
+                                    resources: containerResources
+                            ]
+                        })
+                        imagePullSecrets( imagePullSecretsList?.collect { pullSecret ->
+                            [name: pullSecret]
+                        })
+                        volumes(volumeData.content)
+                    }
+                }
+
+            }
+        }
+
+        def payload = existingDeployment
+        if (payload) {
+            payload = mergeObjs(payload, result)
+        } else {
+            payload = result
+        }
+        return ((new JsonBuilder(payload)).toPrettyString())
+    }
 }

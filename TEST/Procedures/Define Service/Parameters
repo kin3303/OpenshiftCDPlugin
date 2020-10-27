@@ -1,0 +1,504 @@
+----------------------------------------------------------------------------------------------------------------
+추가된 Parameters 
+----------------------------------------------------------------------------------------------------------------
+
+minAvailabilityPercentage
+maxRunningPercentage
+deploymentStrategy
+
+
+---------------------------------------------------------------------------------------------------------------------
+ec_parameterForm
+---------------------------------------------------------------------------------------------------------------------
+<!--
+
+     Copyright 2016 CloudBees, Inc.
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+         http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+
+-->
+<editor>
+    <formElement>
+        <type>entry</type>
+        <label>Service Name Override:</label>
+        <property>serviceNameOverride</property>
+        <required>0</required>
+        <documentation>Name for the service in OpenShift. If no override value is specified here, the service name in CloudBees CD will be used to name the service in OpenShift.</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Deployment Name Override:</label>
+        <property>deploymentNameOverride</property>
+        <required>0</required>
+        <documentation>Name for the deployment in OpenShift. If no value is specified here, then the name of the OpenShift service being created or updated will be used to name the deployment in OpenShift.</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Service Project Name:</label>
+        <property>serviceProjectName</property>
+        <required>0</required>
+        <documentation>The name of the project that the service belongs to.</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Application Name:</label>
+        <property>applicationName</property>
+        <required>0</required>
+        <documentation>The name of the application that the service belongs to. Not applicable for a top-level service.</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Application Project Name:</label>
+        <property>applicationProjectName</property>
+        <required>0</required>
+        <documentation>The name of the project that the application belongs to. Not applicable for a top-level service.</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Service Name Override:</label>
+        <property>serviceNameOverride</property>
+        <required>0</required>
+        <documentation>Name for the service in the OpenShift cluster. If no override value is specified here, the service name in CloudBees CD will be used to name the service in OpenShift.</documentation>
+    </formElement>
+
+    <formElement>
+        <type>entry</type>
+        <label>Deployment Name Override:</label>
+        <property>deploymentNameOverride</property>
+        <required>0</required>
+        <documentation>Name for the deployment in the OpenShift cluster. If no value is specified here, then the name of the service being created or updated in OpenShift will be used to name the deployment.</documentation>
+    </formElement>
+
+    <formElement>
+        <label>Perform Canary Deployment:</label>
+        <property>canaryDeployment</property>
+        <documentation>A fixed text or property reference e.g., '$[doCanaryDeployment]' that evaluates to 'true' or 'false'. If evaluated to true, then a canary deployment will be performed. Any previous deployment will remain unchanged in the namespace allowing this canary deployment to receive live traffic side by side with the previous deployment.</documentation>
+        <type>entry</type>
+        <required>0</required>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Number of Canary Replicas:</label>
+        <property>numberOfCanaryReplicas</property>
+        <required>0</required>
+        <value>1</value>
+        <documentation>The number of replicas to create if performing a canary deployment. Defaults to 1 replica for the canary deployment.</documentation>
+    </formElement>
+    <formElement>
+        <type>select</type>
+        <label>Service Type:</label>
+        <property>serviceType</property>
+        <value>LoadBalancer</value>
+        <required>0</required>
+        <option>
+            <name>ClusterIP</name>
+            <value>ClusterIP</value>
+        </option>
+        <option>
+            <name>LoadBalancer</name>
+            <value>LoadBalancer</value>
+        </option>
+        <option>
+            <name>NodePort</name>
+            <value>NodePort</value>
+        </option>
+        <documentation>Kind of Kubernetes service to create.</documentation>
+    </formElement>
+
+    <formElement>
+        <type>entry</type>
+        <label>LoadBalancer IP:</label>
+        <property>loadBalancerIP</property>
+        <required>0</required>
+        <documentation>IP to use for the load balancer for 'LoadBalancer' service type.</documentation>
+    </formElement>
+
+    <formElement>
+        <type>entry</type>
+        <label>LoadBalancer Source Ranges:</label>
+        <property>loadBalancerSourceRanges</property>
+        <required>0</required>
+        <documentation>Comma-separated list of IP CIDR ranges to specify the IP ranges that are allowed to access the load balancer.</documentation>
+    </formElement>
+
+    <formElement>
+        <type>checkbox</type>
+        <label>Enable Client-IP based Session Affinity?</label>
+        <property>sessionAffinity</property>
+        <required>0</required>
+        <checkedValue>ClientIP</checkedValue>
+        <uncheckedValue>None</uncheckedValue>
+        <initiallyChecked>0</initiallyChecked>
+        <documentation>Whether to enable client-IP based session affinity. Defaults to round robin if not checked.</documentation>
+    </formElement>
+    <!--Route parameters begin -->
+    <formElement>
+        <type>entry</type>
+        <label>Route Name:</label>
+        <property>routeName</property>
+        <required>0</required>
+        <documentation>A unique name for the route within the OpenShift project. The route will be created if it does not already exist.</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Route Hostname:</label>
+        <property>routeHostname</property>
+        <required>0</required>
+        <documentation>Public hostname for the route. The hostname can't be changed after the route is created.</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Route Path:</label>
+        <property>routePath</property>
+        <required>0</required>
+        <documentation>Path that the router watches to route traffic to the service. If not specified, will default to '/'.</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Route Target Port:</label>
+        <property>routeTargetPort</property>
+        <required>0</required>
+        <documentation>Target port of the service to route the traffic.</documentation>
+    </formElement>
+    <!--Route parameters end -->
+    <formElement>
+        <type>entry</type>
+        <label>Deployment Timeout (in seconds):</label>
+        <property>deploymentTimeoutInSec</property>
+        <required>0</required>
+        <value>120</value>
+        <documentation>Number of seconds to wait for deployment to complete. If not complete within this period, deployment is marked as failed.</documentation>
+    </formElement>
+    <formElement>
+        <type>checkbox</type>
+        <label>Create or update Additional Resource in the Cluster?</label>
+        <property>createOrUpdateResource</property>
+        <required>0</required>
+        <checkedValue>1</checkedValue>
+        <uncheckedValue>0</uncheckedValue>
+        <initiallyChecked>0</initiallyChecked>
+        <documentation>Whether to create or update any additional Kubernetes resource in the cluster.</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Additional Resource URI:</label>
+        <property>resourceUri</property>
+        <required>0</required>
+        <documentation>The URI for the additional Kubernetes resource to be created or updated during service deployment. E.g., '/api/v1/namespaces/default/persistentvolumeclaims'.</documentation>
+    </formElement>
+    <formElement>
+        <type>textarea</type>
+        <label>Additional Resource Payload:</label>
+        <property>resourceData</property>
+        <required>0</required>
+        <documentation>The request body in JSON or YAML format for the additional Kubernetes resource to be created or updated during service deployment.</documentation>
+    </formElement>
+    <formElement>
+        <type>select</type>
+        <label>Operation Type:</label>
+        <property>requestType</property>
+        <value>create</value>
+        <required>0</required>
+        <option>
+            <name>Create (POST)</name>
+            <value>create</value>
+        </option>
+        <option>
+            <name>Update (PUT)</name>
+            <value>update</value>
+        </option>
+        <option>
+            <name>Update (PATCH)</name>
+            <value>patch</value>
+        </option>
+        <documentation>Whether to create or update the resource.</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Deployment Strategy</label>
+        <property>deploymentStrategy</property>
+        <required>0</required>
+        <documentation></documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Max Running Percentage</label>
+        <property>maxRunningPercentage</property>
+        <required>0</required>
+        <documentation></documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Min Availability Percentage</label>
+        <property>minAvailabilityPercentage</property>
+        <required>0</required>
+        <documentation></documentation>
+    </formElement>
+</editor>
+
+
+---------------------------------------------------------------------------------------------------------------------
+serviceMappingsForm
+---------------------------------------------------------------------------------------------------------------------
+<!--
+
+     Copyright 2016 CloudBees, Inc.
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+         http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+
+-->
+<editor>
+    <formElement>
+        <type>entry</type>
+        <label>Service Name Override:</label>
+        <property>serviceNameOverride</property>
+        <required>0</required>
+        <documentation>Name for the service in the OpenShift cluster. If no override value is specified here, the service name in CloudBees CD will be used to name the service in OpenShift.</documentation>
+    </formElement>
+
+    <formElement>
+        <type>entry</type>
+        <label>Deployment Name Override:</label>
+        <property>deploymentNameOverride</property>
+        <required>0</required>
+        <documentation>Name for the deployment in the OpenShift cluster. If no value is specified here, then the name of the service being created or updated in OpenShift will be used to name the deployment.</documentation>
+    </formElement>
+
+    <formElement>
+        <label>Perform Canary Deployment:</label>
+        <property>canaryDeployment</property>
+        <documentation>A fixed text or property reference e.g., '$[doCanaryDeployment]' that evaluates to 'true' or 'false'. If evaluated to true, then a canary deployment will be performed. Any previous deployment will remain unchanged in the namespace allowing this canary deployment to receive live traffic side by side with the previous deployment.</documentation>
+        <type>entry</type>
+        <required>0</required>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Number of Canary Replicas:</label>
+        <property>numberOfCanaryReplicas</property>
+        <required>0</required>
+        <value>1</value>
+        <documentation>The number of replicas to create if performing a canary deployment. Defaults to 1 replica for the canary deployment.</documentation>
+    </formElement>
+
+    <!-- Load balancer section -->
+    <!-- main field -->
+    <formElement>
+        <type>select</type>
+        <label>Service Type:</label>
+        <property>serviceType</property>
+        <value>LoadBalancer</value>
+        <required>0</required>
+        <option>
+            <name>ClusterIP</name>
+            <value>ClusterIP</value>
+        </option>
+        <option>
+            <name>LoadBalancer</name>
+            <value>LoadBalancer</value>
+        </option>
+        <option>
+            <name>NodePort</name>
+            <value>NodePort</value>
+        </option>
+        <documentation>Kind of Kubernetes service to create.</documentation>
+    </formElement>
+    <!-- Improvements for ECPOPSHIFT-101 -->
+    <!-- Header for Additional LoadBalancer Details -->
+    <formElement>
+        <type>header</type>
+        <label>Additional LoadBalancer Details</label>
+        <property>headerType</property>
+        <!-- Improvements for ECPOPSHIFT-123 -->
+        <condition>${serviceType} == 'LoadBalancer'</condition>
+        <dependsOn>serviceType</dependsOn>
+        <!-- End Improvements for ECPOPSHIFT-123 -->
+    </formElement>
+    <!-- End of improvements for ECPOPSHIFT-101 -->
+    <!-- Dependent fields -->
+    <formElement>
+        <type>entry</type>
+        <label>LoadBalancer IP:</label>
+        <property>loadBalancerIP</property>
+        <required>0</required>
+        <!-- Improvements for ECPOPSHIFT-101 -->
+        <condition>${serviceType} == 'LoadBalancer'</condition>
+        <dependsOn>serviceType</dependsOn>
+        <!-- End of improvements for ECPOPSHIFT-101 -->
+        <documentation>IP to use for the load balancer for 'LoadBalancer' service type.</documentation>
+    </formElement>
+
+    <formElement>
+        <type>entry</type>
+        <label>LoadBalancer Source Ranges:</label>
+        <property>loadBalancerSourceRanges</property>
+        <required>0</required>
+        <!-- Improvements for ECPOPSHIFT-101 -->
+        <condition>${serviceType} == 'LoadBalancer'</condition>
+        <dependsOn>serviceType</dependsOn>
+        <!-- End of improvements for ECPOPSHIFT-101 -->
+        <documentation>Comma-separated list of IP CIDR ranges to specify the IP ranges that are allowed to access the load balancer.</documentation>
+    </formElement>
+    <!-- End of load balancer section -->
+
+    <formElement>
+        <type>entry</type>
+        <label>Deployment Timeout (in seconds):</label>
+        <property>deploymentTimeoutInSec</property>
+        <required>0</required>
+        <value>120</value>
+        <documentation>Number of seconds to wait for deployment to complete. If not complete within this period, deployment is marked as failed.</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Deployment Strategy</label>
+        <property>deploymentStrategy</property>
+        <required>0</required>
+        <documentation></documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Max Running Percentage</label>
+        <property>maxRunningPercentage</property>
+        <required>0</required>
+        <documentation></documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Min Availability Percentage</label>
+        <property>minAvailabilityPercentage</property>
+        <required>0</required>
+        <documentation></documentation>
+    </formElement>
+    <formElement>
+        <type>checkbox</type>
+        <label>Enable Client-IP based Session Affinity?</label>
+        <property>sessionAffinity</property>
+        <required>0</required>
+        <checkedValue>ClientIP</checkedValue>
+        <uncheckedValue>None</uncheckedValue>
+        <initiallyChecked>0</initiallyChecked>
+        <documentation>Whether to enable client-IP based session affinity. Defaults to round robin if not checked.</documentation>
+    </formElement>
+    <!--Route parameters begin -->
+    <formElement>
+        <type>entry</type>
+        <label>Route Name:</label>
+        <property>routeName</property>
+        <required>0</required>
+        <documentation>A unique name for the route within the OpenShift project. The route will be created if it does not already exist.</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Route Hostname:</label>
+        <property>routeHostname</property>
+        <required>0</required>
+        <documentation>Public hostname for the route. The hostname can't be changed after the route is created.</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Route Path:</label>
+        <property>routePath</property>
+        <required>0</required>
+        <documentation>Path that the router watches to route traffic to the service. If not specified, will default to '/'.</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Route Target Port:</label>
+        <property>routeTargetPort</property>
+        <required>0</required>
+        <documentation>Target port of the service to route the traffic.</documentation>
+    </formElement>
+    <!--Route parameters end -->
+
+    <!-- Additional resource section -->
+    <!-- Main field -->
+    <formElement>
+        <type>checkbox</type>
+        <label>Create or update Additional Resource in the Cluster?</label>
+        <property>createOrUpdateResource</property>
+        <required>0</required>
+        <checkedValue>1</checkedValue>
+        <uncheckedValue>0</uncheckedValue>
+        <initiallyChecked>0</initiallyChecked>
+        <documentation>Whether to create or update any additional Kubernetes resource in the cluster.</documentation>
+    </formElement>
+    <!-- Improvements for ECPOPSHIFT-101 -->
+    <!-- Header for Additional Resource Details -->
+    <formElement>
+        <type>header</type>
+        <label>Additional Resource Details</label>
+        <property>headerType</property>
+        <!-- Improvements for ECPOPSHIFT-123 -->
+        <condition>${createOrUpdateResource} == 1</condition>
+        <dependsOn>createOrUpdateResource</dependsOn>
+        <!-- End of Improvements for ECPOPSHIFT-123 -->
+    </formElement>
+    <!-- End of improvements for ECPOPSHIFT-101 -->
+    <formElement>
+        <type>entry</type>
+        <label>Additional Resource URI:</label>
+        <property>resourceUri</property>
+        <required>0</required>
+        <!-- Improvements for ECPOPSHIFT-101 -->
+        <condition>${createOrUpdateResource} == 1</condition>
+        <dependsOn>createOrUpdateResource</dependsOn>
+        <!-- End of improvements for ECPOPSHIFT-101 -->
+        <documentation>The URI for the additional Kubernetes resource to be created or updated during service deployment. E.g., '/api/v1/namespaces/default/persistentvolumeclaims'.</documentation>
+    </formElement>
+    <formElement>
+        <type>textarea</type>
+        <label>Additional Resource Payload:</label>
+        <property>resourceData</property>
+        <required>0</required>
+        <!-- Improvements for ECPOPSHIFT-101 -->
+        <condition>${createOrUpdateResource} == 1</condition>
+        <dependsOn>createOrUpdateResource</dependsOn>
+        <!-- End of improvements for ECPOPSHIFT-101 -->
+        <documentation>The request body in JSON or YAML format for the additional Kubernetes resource to be created or updated during service deployment.</documentation>
+    </formElement>
+    <!-- End of additional resource section -->
+    <formElement>
+        <type>select</type>
+        <label>Operation Type:</label>
+        <property>requestType</property>
+        <value>create</value>
+        <required>0</required>
+        <!-- Improvements for ECPOPSHIFT-123 -->
+        <condition>${createOrUpdateResource} == 1</condition>
+        <dependsOn>createOrUpdateResource</dependsOn>
+        <!-- End of Improvements for ECPOPSHIFT-123 -->
+        <option>
+            <name>Create (POST)</name>
+            <value>create</value>
+        </option>
+        <option>
+            <name>Update (PUT)</name>
+            <value>update</value>
+        </option>
+        <option>
+            <name>Update (PATCH)</name>
+            <value>patch</value>
+        </option>
+        <documentation>Whether to create or update the resource.</documentation>
+    </formElement>
+</editor>
