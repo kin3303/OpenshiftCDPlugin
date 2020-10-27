@@ -112,6 +112,3 @@ if ("$errors" ne "") {
     print $errMsg;
     exit 1;
 }
-
-
-#EC-PERL 로 수정필요
