@@ -332,7 +332,7 @@ public class ImportFromTemplate extends EFClient {
             }
         }
 
-        saveDeploymentsToServiceObject(projectName, applicationName, service.service.serviceName)
+        //saveDeploymentsToServiceObject(projectName, applicationName, service.service.serviceName)
         
         result
     }
@@ -1179,6 +1179,7 @@ public class ImportFromTemplate extends EFClient {
         result?.data
     }
 
+/*
    def setPropertyToServiceObject(String projectName, String applicationName, String serviceName, String propertyName, String value) { 
         def payload = [:] 
         payload << [
@@ -1201,4 +1202,11 @@ public class ImportFromTemplate extends EFClient {
             }
         } 
     }
+
+    def getPropertyFromService(String projectName, String applicationName, String serviceName, String propertyName) { 
+        def result=getEFProperty("/projects/${projectName}/applications/${applicationName}/services/${serviceName}/${propertyName}", /*ignoreError*/ true)
+        def mapPayload = new JsonSlurper().parseText(new String(result.data.property.value))
+        return mapPayload
+    }
+*/
 }
