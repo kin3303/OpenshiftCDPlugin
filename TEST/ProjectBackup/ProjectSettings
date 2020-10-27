@@ -1,0 +1,21 @@
+1. Git Configuration
+    Administration->Source Control->Create Configuration
+
+1. Jenkins 서버 Configuration
+    flow->Administration->Configuration->CI Configuration->Create New CI Configuration->jenkinsCfg
+        Server URL : http://34.72.51.173:8080
+        UserName : admin
+        Password : admin
+
+2. SonarQube Configuration
+    Administration->Plugins->SonarQube->Configure->->Create Configuration->sonarcfg
+        HOST : cloudbees.devops.mousoft.co.kr
+        SonarQube server port : 9000
+        User Name : admin
+        Password : admin
+        Retype Password : admin
+
+3. Openshift Configuration
+    Administration->Plugins->EC-Openshift->Configure->Create Configuration->my-prod-sa
+    Administration->Plugins->EC-Openshift->Configure->Create Configuration->my-dev-sa
+        https://github.com/kin3303/DDI_OPENSHIFT/blob/testEnv/README-CloudbeesCD-Conf.md
