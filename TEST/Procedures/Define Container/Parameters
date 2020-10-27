@@ -1,7 +1,19 @@
+----------------------------------------------------------------------------------------------------------------
+추가된 Parameters 
+----------------------------------------------------------------------------------------------------------------
+
 livenessCommand
 livenessFailureThreshold
 livenessSuccessThreshold
 livenessTimeoutSeconds
+
+readinessFailureThreshold
+readinessHttpProbeHttpHeaderName
+readinessHttpProbeHttpHeaderValue
+readinessHttpProbePath
+readinessHttpProbePort  
+readinessSuccessThreshold
+readinessTimeoutSeconds 
 
 
 ----------------------------------------------------------------------------------------------------------------
@@ -99,6 +111,14 @@ ec_parameterForm
     </formElement>
     <formElement>
         <type>entry</type>
+        <label>Liveness command:</label>
+        <property>livenessCommand</property>
+        <default>/</default>
+        <required>0</required>
+        <documentation></documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
         <label>Liveness Intial Delay:</label>
         <property>livenessInitialDelay</property>
         <default>3</default>
@@ -112,16 +132,7 @@ ec_parameterForm
         <default>5</default>
         <required>0</required>
         <documentation>Interval at which liveness of container should be checked after initial delay,  defaults to 5s.</documentation>
-    </formElement>
-
-    <formElement>
-        <type>entry</type>
-        <label>Liveness command:</label>
-        <property>livenessCommand</property>
-        <default>/</default>
-        <required>0</required>
-        <documentation></documentation>
-    </formElement>
+    </formElement>    
     <formElement>
         <type>entry</type>
         <label>Liveness Failure Threshold:</label>
@@ -146,7 +157,36 @@ ec_parameterForm
         <required>0</required>
         <documentation></documentation>
     </formElement>
-
+    <formElement>
+        <type>entry</type>
+        <label>Readiness Check Path:</label>
+        <property>readinessHttpProbePath</property>
+        <default>/</default>
+        <required>0</required>
+        <documentation>HTTP path to check readiness of the container</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Readiness Check Port:</label>
+        <property>readinessHttpProbePort</property>
+        <default></default>
+        <required>0</required>
+        <documentation>HTTP Port to check readiness of container</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Readiness Header Name</label>
+        <property>readinessHttpProbeHttpHeaderName</property>
+        <required>0</required>
+        <documentation>Header name if any for readiness check</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Readiness Header Value:</label>
+        <property>readinessHttpProbeHttpHeaderValue</property>
+        <required>0</required>
+        <documentation>Header value if any for readiness check</documentation>
+    </formElement> 
     <formElement>
         <type>entry</type>
         <label>Readiness command:</label>
@@ -170,6 +210,30 @@ ec_parameterForm
         <required>0</required>
         <documentation>Interval at which Readiness of container should be checked after initial delay,  defaults to 5s.</documentation>
     </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Readiness Failure Threshold:</label>
+        <property>readinessFailureThreshold</property>
+        <default></default>
+        <required>0</required>
+        <documentation></documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Readiness Success Threshold:</label>
+        <property>readinessSuccessThreshold</property>
+        <default></default>
+        <required>0</required>
+        <documentation></documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Readiness Timeout Seconds:</label>
+        <property>readinessTimeoutSeconds</property>
+        <default></default>
+        <required>0</required>
+        <documentation></documentation>
+    </formElement>     
 </editor>
 
 
@@ -226,6 +290,14 @@ containerMappingsForm
     </formElement>
     <formElement>
         <type>entry</type>
+        <label>Liveness command:</label>
+        <property>livenessCommand</property>
+        <default>/</default>
+        <required>0</required>
+        <documentation></documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
         <label>Liveness Intial Delay:</label>
         <property>livenessInitialDelay</property>
         <default>3</default>
@@ -239,15 +311,6 @@ containerMappingsForm
         <default>5</default>
         <required>0</required>
         <documentation>Interval at which liveness of container should be checked after initial delay,  defaults to 5s.</documentation>
-    </formElement>
-
-    <formElement>
-        <type>entry</type>
-        <label>Liveness command:</label>
-        <property>livenessCommand</property>
-        <default>/</default>
-        <required>0</required>
-        <documentation></documentation>
     </formElement>
     <formElement>
         <type>entry</type>
@@ -274,7 +337,36 @@ containerMappingsForm
         <documentation></documentation>
     </formElement>
 
-  
+    <formElement>
+        <type>entry</type>
+        <label>Readiness Check Path:</label>
+        <property>readinessHttpProbePath</property>
+        <default>/</default>
+        <required>0</required>
+        <documentation>HTTP path to check readiness of the container</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Readiness Check Port:</label>
+        <property>readinessHttpProbePort</property>
+        <default></default>
+        <required>0</required>
+        <documentation>HTTP Port to check readiness of container</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Readiness Header Name</label>
+        <property>readinessHttpProbeHttpHeaderName</property>
+        <required>0</required>
+        <documentation>Header name if any for readiness check</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Readiness Header Value:</label>
+        <property>readinessHttpProbeHttpHeaderValue</property>
+        <required>0</required>
+        <documentation>Header value if any for readiness check</documentation>
+    </formElement>
     <formElement>
         <type>entry</type>
         <label>Readiness command:</label>
@@ -297,5 +389,29 @@ containerMappingsForm
         <default>5</default>
         <required>0</required>
         <documentation>Interval at which Readiness of container should be checked after initial delay,  defaults to 5s.</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Readiness Failure Threshold:</label>
+        <property>readinessFailureThreshold</property>
+        <default></default>
+        <required>0</required>
+        <documentation></documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Readiness Success Threshold:</label>
+        <property>readinessSuccessThreshold</property>
+        <default></default>
+        <required>0</required>
+        <documentation></documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Readiness Timeout Seconds:</label>
+        <property>readinessTimeoutSeconds</property>
+        <default></default>
+        <required>0</required>
+        <documentation></documentation>
     </formElement>
 </editor>
