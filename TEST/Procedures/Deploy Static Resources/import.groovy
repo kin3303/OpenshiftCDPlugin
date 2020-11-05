@@ -4,7 +4,7 @@ $[/myProject/scripts/OpenshiftClientEx]
 
 // Input parameters
 def osTemplateYaml = '''$[osTemplateYaml]'''.trim()
-def osTemplateValues =  '''$[templateParamValues]'''.trim().split('/').collect{it as String}
+def osTemplateValues =  '''$[templateParamValues]'''.trim().split('\n').collect{it as String}
 def envProjectName = '$[envProjectName]'
 def environmentNames =  "$[envName]".trim().split(",").collect{it as String}
 def clusterNames =  "$[clusterName]".trim().split(",").collect{it as String}

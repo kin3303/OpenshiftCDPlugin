@@ -28,19 +28,20 @@ use constant {
 my $ec = new ElectricCommander();
 $ec->abortOnError(0);
 
-my $credName = '$[config]';
+my $credName = '$[/myJob/config]';
 
-my $xpath = $ec->getFullCredential($credName);
+my $xpath = $ec->getFullCredential("credential");
 my $errors = $ec->checkAllErrors($xpath);
 my $clientID = $xpath->findvalue("//userName");
 my $clientSecret = $xpath->findvalue("//password");
 
 my $projName = '$[/myProject/projectName]';
-
+print "credName : $credName\n";
 # Create credential
 $ec->deleteCredential($projName, $credName);
 $xpath = $ec->createCredential($projName, $credName, $clientID, $clientSecret);
 $errors .= $ec->checkAllErrors($xpath);
+
 
 # Give config the credential's real name
 my $configPath = "/projects/$projName/ec_plugin_cfgs/$credName";
