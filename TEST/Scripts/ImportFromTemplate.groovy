@@ -1202,35 +1202,4 @@ public class ImportFromTemplate extends EFClient {
         def result = doRestPost("/rest/${REST_VERSION}/projects/${projName}/applications/${appName}/tierMaps/${envMapName}/serviceClusterMappings/${serviceClusterMapName}/serviceMapDetails", payload, false)
         result?.data
     }
-
-/*
-   def setPropertyToServiceObject(String projectName, String applicationName, String serviceName, String propertyName, String value) { 
-        def payload = [:] 
-        payload << [
-            value: value,
-            projectName: projectName,
-            applicationName: applicationName,
-            serviceName: serviceName
-        ]
-        payload = JsonOutput.toJson(payload)
- 
-        doHttpPut("/rest/v1.0/properties/${propertyName}", payload)
-    }   
-
-    def saveDeploymentsToServiceObject(String projectName, String applicationName, String serviceName) {
-        if(applicationName) { 
-            parsedConfigList.each { config ->
-                if (config.kind in ['Deployment','DeploymentConfig']){
-                    setPropertyToServiceObject(projectName, applicationName, serviceName, config.metadata.name ,new JsonBuilder(config).toPrettyString())
-                }
-            }
-        } 
-    }
-
-    def getPropertyFromService(String projectName, String applicationName, String serviceName, String propertyName) { 
-        def result=getEFProperty("/projects/${projectName}/applications/${applicationName}/services/${serviceName}/${propertyName}", /*ignoreError*/ true)
-        def mapPayload = new JsonSlurper().parseText(new String(result.data.property.value))
-        return mapPayload
-    }
-*/
 }
