@@ -6,6 +6,7 @@ livenessCommand
 livenessFailureThreshold
 livenessSuccessThreshold
 livenessTimeoutSeconds
+livenessTcpProbePort
 
 readinessFailureThreshold
 readinessHttpProbeHttpHeaderName
@@ -13,7 +14,8 @@ readinessHttpProbeHttpHeaderValue
 readinessHttpProbePath
 readinessHttpProbePort  
 readinessSuccessThreshold
-readinessTimeoutSeconds 
+readinessTimeoutSeconds
+readinessTcpProbePort
 
 
 ----------------------------------------------------------------------------------------------------------------
@@ -109,6 +111,16 @@ ec_parameterForm
         <required>0</required>
         <documentation>Header value if any for liveness check</documentation>
     </formElement>
+
+    <formElement>
+        <type>entry</type>
+        <label>Liveness Tcp Check Port:</label>
+        <property>livenessTcpProbePort</property>
+        <default></default>
+        <required>0</required>
+        <documentation>HTTP Port to check liveness of container</documentation>
+    </formElement>
+
     <formElement>
         <type>entry</type>
         <label>Liveness command:</label>
@@ -187,6 +199,16 @@ ec_parameterForm
         <required>0</required>
         <documentation>Header value if any for readiness check</documentation>
     </formElement> 
+
+    <formElement>
+        <type>entry</type>
+        <label>Readiness Tcp Check Port:</label>
+        <property>readinessTcpProbePort</property>
+        <default></default>
+        <required>0</required>
+        <documentation>HTTP Port to check liveness of container</documentation>
+    </formElement>
+
     <formElement>
         <type>entry</type>
         <label>Readiness command:</label>
@@ -288,6 +310,16 @@ containerMappingsForm
         <required>0</required>
         <documentation>Header value if any for liveness check</documentation>
     </formElement>
+
+    <formElement>
+        <type>entry</type>
+        <label>Liveness Tcp Check Port:</label>
+        <property>livenessTcpProbePort</property>
+        <default></default>
+        <required>0</required>
+        <documentation>HTTP Port to check liveness of container</documentation>
+    </formElement>
+
     <formElement>
         <type>entry</type>
         <label>Liveness command:</label>
@@ -367,6 +399,16 @@ containerMappingsForm
         <required>0</required>
         <documentation>Header value if any for readiness check</documentation>
     </formElement>
+
+    <formElement>
+        <type>entry</type>
+        <label>Readiness Tcp Check Port:</label>
+        <property>readinessTcpProbePort</property>
+        <default></default>
+        <required>0</required>
+        <documentation>HTTP Port to check liveness of container</documentation>
+    </formElement>
+        
     <formElement>
         <type>entry</type>
         <label>Readiness command:</label>

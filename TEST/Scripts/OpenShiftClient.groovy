@@ -329,77 +329,106 @@ public class OpenShiftClient extends KubernetesClient {
 
                             // Liveness Probe
                             def livenessProbe = [:]
-                            if(getServiceParameter(svcContainer, 'livenessHttpProbePath') && getServiceParameter(svcContainer, 'livenessHttpProbePort')){
+                            def livenessCommand = getServiceParameter(svcContainer, 'livenessCommand') 
+                            def livenessFailureThreshold = getServiceParameter(svcContainer, 'livenessFailureThreshold')?.toInteger()
+                            def livenessSuccessThreshold = getServiceParameter(svcContainer, 'livenessSuccessThreshold')?.toInteger()
+                            def livenessTimeoutSeconds = getServiceParameter(svcContainer, 'livenessTimeoutSeconds')?.toInteger()
+                            def livenessInitialDelay = getServiceParameter(svcContainer, 'livenessInitialDelay')?.toInteger()
+                            def livenessPeriod = getServiceParameter(svcContainer, 'livenessPeriod')?.toInteger()
+
+                            if(livenessCommand) {
+                                livenessProbe = [exec: [command:[:]]]
+                                livenessProbe.exec.command = ["${livenessCommand}"] 
+                            } else if(getServiceParameter(svcContainer, 'livenessHttpProbePath') && getServiceParameter(svcContainer, 'livenessHttpProbePort')){
                                 def httpHeaderName = getServiceParameter(svcContainer, 'livenessHttpProbeHttpHeaderName')
                                 def httpHeaderValue = getServiceParameter(svcContainer, 'livenessHttpProbeHttpHeaderValue')
-                                def livenessCommand = getServiceParameter(svcContainer, 'livenessCommand') 
-                                def livenessFailureThreshold = getServiceParameter(svcContainer, 'livenessFailureThreshold')
-                                def livenessSuccessThreshold = getServiceParameter(svcContainer, 'livenessSuccessThreshold') 
-                                def livenessTimeoutSeconds = getServiceParameter(svcContainer, 'livenessTimeoutSeconds')
-                                def livenessInitialDelay = getServiceParameter(svcContainer, 'livenessInitialDelay')
-                                def livenessPeriod = getServiceParameter(svcContainer, 'livenessPeriod')
- 
-                                if(!livenessCommand && httpHeaderName && httpHeaderValue){
-                                    def httpHeader = [name:"", value: ""]
+                                if( httpHeaderName && httpHeaderValue){
+                                def httpHeader = [name:"", value: ""]
                                     livenessProbe = [httpGet:[path:"", port:"", httpHeaders:[httpHeader]], ]
                                     livenessProbe.httpGet.path = getServiceParameter(svcContainer, 'livenessHttpProbePath')
                                     livenessProbe.httpGet.port = (getServiceParameter(svcContainer, 'livenessHttpProbePort')).toInteger()
                                     httpHeader.name = httpHeaderName
                                     httpHeader.value = httpHeaderValue
-                                } else if(!livenessCommand) {
+                                } else {
                                     livenessProbe = [httpGet:[path:"", port:""]]
                                     livenessProbe.httpGet.path = getServiceParameter(svcContainer, 'livenessHttpProbePath')
                                     livenessProbe.httpGet.port = (getServiceParameter(svcContainer, 'livenessHttpProbePort')).toInteger()
-                                } else {
-                                    livenessProbe = [exec: [command:[:]]]
-                                    livenessProbe.exec.command = ["${livenessCommand}"] 
                                 }
-
-                                livenessProbe.initialDelaySeconds = livenessInitialDelay.toInteger()
-                                livenessProbe.periodSeconds = livenessPeriod.toInteger()
-                                livenessProbe.failureThreshold = livenessFailureThreshold.toInteger()
-                                livenessProbe.successThreshold = livenessSuccessThreshold.toInteger()
-                                livenessProbe.timeoutSeconds = livenessTimeoutSeconds.toInteger()
-
+                            } else if(getServiceParameter(svcContainer, 'livenessTcpProbePort')) {
+                                livenessProbe = [tcpSocket:[port:""]]
+                                livenessProbe.tcpSocket.port = (getServiceParameter(svcContainer, 'livenessTcpProbePort')).toInteger()
                             } else {
                                 livenessProbe = null
                             }
 
+                            if(livenessProbe) {
+                                if(livenessFailureThreshold) {
+                                    livenessProbe.failureThreshold = livenessFailureThreshold
+                                }
+                                if(livenessSuccessThreshold) {
+                                    livenessProbe.successThreshold = livenessSuccessThreshold
+                                } 
+                                if(livenessTimeoutSeconds) {
+                                    livenessProbe.timeoutSeconds = livenessTimeoutSeconds
+                                }
+                                if(livenessInitialDelay) {
+                                    livenessProbe.initialDelaySeconds = livenessInitialDelay
+                                }
+                                if(livenessPeriod) {
+                                    livenessProbe.periodSeconds = livenessPeriod
+                                }
+                            }
+
                             // Readiness Probe
                             def readinessProbe = [:]
-                            if(getServiceParameter(svcContainer, 'readinessHttpProbePath') && getServiceParameter(svcContainer, 'readinessHttpProbePort')){
+                            def readinessFailureThreshold = getServiceParameter(svcContainer, 'readinessFailureThreshold')?.toInteger()
+                            def readinessSuccessThreshold = getServiceParameter(svcContainer, 'readinessSuccessThreshold')?.toInteger()
+                            def readinessTimeoutSeconds = getServiceParameter(svcContainer, 'readinessTimeoutSeconds')?.toInteger()
+                            def readinessInitialDelay = getServiceParameter(svcContainer, 'readinessInitialDelay')?.toInteger()
+                            def readinessPeriod = getServiceParameter(svcContainer, 'readinessPeriod')?.toInteger()
+
+                            def readinessCommand = getServiceParameter(svcContainer, 'readinessCommand') 
+                            if(readinessCommand) {
+                                readinessProbe = [exec: [command:[:]]]
+                                readinessProbe.exec.command = ["${readinessCommand}"] 
+                            } else if(getServiceParameter(svcContainer, 'readinessHttpProbePath') && getServiceParameter(svcContainer, 'readinessHttpProbePort')){
                                 def httpHeaderName = getServiceParameter(svcContainer, 'readinessHttpProbeHttpHeaderName')
                                 def httpHeaderValue = getServiceParameter(svcContainer, 'readinessHttpProbeHttpHeaderValue')
-                                def readinessCommand = getServiceParameter(svcContainer, 'readinessCommand') 
-                                def readinessFailureThreshold = getServiceParameter(svcContainer, 'readinessFailureThreshold')
-                                def readinessSuccessThreshold = getServiceParameter(svcContainer, 'readinessSuccessThreshold') 
-                                def readinessTimeoutSeconds = getServiceParameter(svcContainer, 'readinessTimeoutSeconds')
-                                def readinessInitialDelay = getServiceParameter(svcContainer, 'readinessInitialDelay')
-                                def readinessPeriod = getServiceParameter(svcContainer, 'readinessPeriod')
- 
-                                if(!readinessCommand && httpHeaderName && httpHeaderValue){
-                                    def httpHeader = [name:"", value: ""]
+                                if( httpHeaderName && httpHeaderValue){
+                                def httpHeader = [name:"", value: ""]
                                     readinessProbe = [httpGet:[path:"", port:"", httpHeaders:[httpHeader]], ]
                                     readinessProbe.httpGet.path = getServiceParameter(svcContainer, 'readinessHttpProbePath')
                                     readinessProbe.httpGet.port = (getServiceParameter(svcContainer, 'readinessHttpProbePort')).toInteger()
                                     httpHeader.name = httpHeaderName
                                     httpHeader.value = httpHeaderValue
-                                } else if(!readinessCommand) {
+                                } else {
                                     readinessProbe = [httpGet:[path:"", port:""]]
                                     readinessProbe.httpGet.path = getServiceParameter(svcContainer, 'readinessHttpProbePath')
                                     readinessProbe.httpGet.port = (getServiceParameter(svcContainer, 'readinessHttpProbePort')).toInteger()
-                                } else {
-                                    readinessProbe = [exec: [command:[:]]]
-                                    readinessProbe.exec.command = ["${readinessCommand}"] 
                                 }
-
-                                readinessProbe.initialDelaySeconds = readinessInitialDelay.toInteger()
-                                readinessProbe.periodSeconds = readinessPeriod.toInteger()
-                                readinessProbe.failureThreshold = readinessFailureThreshold.toInteger()
-                                readinessProbe.successThreshold = readinessSuccessThreshold.toInteger()
-                                readinessProbe.timeoutSeconds = readinessTimeoutSeconds.toInteger()
+                            } else if(getServiceParameter(svcContainer, 'readinessTcpProbePort')) {
+                                readinessProbe = [tcpSocket:[port:""]]
+                                readinessProbe.tcpSocket.port = (getServiceParameter(svcContainer, 'readinessTcpProbePort')).toInteger()
                             } else {
                                 readinessProbe = null
+                            }
+ 
+							if(readinessProbe) {
+                                if(readinessFailureThreshold) {
+                                    readinessProbe.failureThreshold = readinessFailureThreshold
+                                }
+                                if(readinessSuccessThreshold) {
+                                    readinessProbe.successThreshold = readinessSuccessThreshold
+                                } 
+                                if(readinessTimeoutSeconds) {
+                                    readinessProbe.timeoutSeconds = readinessTimeoutSeconds
+                                }
+                                if(readinessInitialDelay) {
+                                    readinessProbe.initialDelaySeconds = readinessInitialDelay
+                                }
+                                if(readinessPeriod) {
+                                    readinessProbe.periodSeconds = readinessPeriod
+                                }
                             }
 
                             [

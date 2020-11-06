@@ -724,7 +724,18 @@ public class ImportFromTemplate extends EFClient {
         }
 
 
-        // Volumes
+        // Volumes >> Supported > hostPath, persistentVolumeClaim
+        /*---------------------------------------------------------------
+           volumes:
+            - name: testvolume
+              hostPath:
+                path: /data
+
+            volumes:
+            - name: "${DATABASE_SERVICE_NAME}-data"
+              persistentVolumeClaim:
+                claimName: "${DATABASE_SERVICE_NAME}"
+        -------------------------------------------------------------------*/
         if (deployment.spec.template.spec.volumes) {
             def index = 0
             def volumes = deployment.spec.template.spec.volumes.collect { volume ->
@@ -733,6 +744,9 @@ public class ImportFromTemplate extends EFClient {
                 if (volume.hostPath?.path) {
                     retval.hostPath = volume.hostPath.path
                     logDeployment.push("/spec/template/spec/volumes[${index}]/hostPath/path")
+                } else if(volume.persistentVolumeClaim?.claimName) {
+                    retval.persistentVolumeClaim = volume.persistentVolumeClaim.claimName
+                    logDeployment.push("/spec/template/spec/volumes[${index}]/persistentVolumeClaim/claimName")
                 }
                 index += 1
                 retval
@@ -949,7 +963,6 @@ public class ImportFromTemplate extends EFClient {
                 registryUri: getRegistryUri(kubeContainer.image) ?: null
             ]
         ]
-        println '-------->testPoint1'
         container.env = kubeContainer.env?.collect {
             if(it.value) {
                 [environmentVariableName: it.name, value: it.value]
@@ -959,7 +972,6 @@ public class ImportFromTemplate extends EFClient {
                 [environmentVariableName: it.name, value: valueString]
             }
         }
-        println '<--------testPoint1'
 
         if (kubeContainer.command) {
             def entryPoint = kubeContainer.command.join(',')
@@ -986,80 +998,139 @@ public class ImportFromTemplate extends EFClient {
 
         container.mapping = [:]
 
-        // Liveness probe
-        if (kubeContainer.livenessProbe) { 
-            def probe = kubeContainer.livenessProbe.httpGet 
-            container.mapping.with {
-                livenessHttpProbePath = probe?.path
-                livenessHttpProbePort = probe?.port
-                livenessInitialDelay = kubeContainer.livenessProbe?.initialDelaySeconds
-                livenessPeriod = kubeContainer.livenessProbe?.periodSeconds
-                def command = kubeContainer.livenessProbe?.command
-                livenessCommand = command?.first()
-                if (command?.size() > 1) {
-                    logger WARNING, 'Only one liveness command is supported'
-                }
-                livenessFailureThreshold = kubeContainer.livenessProbe?.failureThreshold
-                if(!livenessFailureThreshold) {
-                    livenessFailureThreshold = 3
-                }
-                livenessSuccessThreshold = kubeContainer.livenessProbe?.successThreshold
-                if(!livenessSuccessThreshold) {
-                    livenessSuccessThreshold = 1
-                }
-                livenessTimeoutSeconds = kubeContainer.livenessProbe?.timeoutSeconds
-                if(!livenessTimeoutSeconds) {
-                    livenessTimeoutSeconds = 1
-                } 
 
-                def probeHeaderSize = probe?.httpHeaders?.size()
-                if (probeHeaderSize && probeHeaderSize > 1) {
-                    logger WARNING, 'Only one liveness header is supported, will take the first'
+
+
+        // Liveness probe
+        /*-----------------------------------------------------------------------
+          livenessProbe:
+            timeoutSeconds: 3
+            initialDelaySeconds: 30
+            httpGet:
+              path: "/"
+              port: 8080   
+
+          livenessProbe:
+            timeoutSeconds: 1
+            initialDelaySeconds: 30
+            tcpSocket:
+              port: 27017  
+
+          livenessProbe:
+            exec:
+            command:
+            - cat
+            - /tmp/healthy
+        ------------------------------------------------------------------------*/
+        if (kubeContainer.livenessProbe) { 
+            def hasProbe = true
+            if(kubeContainer.livenessProbe.exec?.command) {
+                container.mapping.with {
+                    def command = kubeContainer.livenessProbe.exec.command
+                    //livenessCommand = command?.first()
+                    //if (command?.size() > 1) {
+                    //    logger WARNING, 'Only one liveness command is supported'
+                    //}
+                    livenessCommand = new JsonBuilder(command).toString()
                 }
-                def header = probe?.httpHeaders?.first()
-                livenessHttpProbeHttpHeaderName = header?.name
-                livenessHttpProbeHttpHeaderValue = header?.value
+            } else if( kubeContainer.livenessProbe.httpGet ) {
+                def probe = kubeContainer.livenessProbe.httpGet 
+                container.mapping.with {
+                    livenessHttpProbePath = probe?.path
+                    livenessHttpProbePort = probe?.port
+                 def probeHeaderSize = probe?.httpHeaders?.size()
+                    if (probeHeaderSize && probeHeaderSize > 1) {
+                        logger WARNING, 'Only one liveness header is supported, will take the first'
+                    }
+                    def header = probe?.httpHeaders?.first()
+                    livenessHttpProbeHttpHeaderName = header?.name
+                    livenessHttpProbeHttpHeaderValue = header?.value
+                }
+            } else if ( kubeContainer.livenessProbe.tcpSocket) {
+                def probe = kubeContainer.livenessProbe.tcpSocket 
+                container.mapping.with {
+                    livenessTcpProbePort = probe?.port
+                }
+            } else {
+                hasProbe = false
+            }
+
+            if(hasProbe) {
+                container.mapping.with {
+                    livenessInitialDelay = kubeContainer.livenessProbe?.initialDelaySeconds
+                    livenessPeriod = kubeContainer.livenessProbe?.periodSeconds
+                    livenessFailureThreshold = kubeContainer.livenessProbe?.failureThreshold
+                    livenessSuccessThreshold = kubeContainer.livenessProbe?.successThreshold
+                    livenessTimeoutSeconds = kubeContainer.livenessProbe?.timeoutSeconds
+                }
             }
         }
         
         // Readiness probe 
-        if (kubeContainer.readinessProbe) {
-            def processedReadinessFields = []
-            def probe = kubeContainer.readinessProbe.httpGet 
-            container.mapping.with {
-                readinessHttpProbePath = probe?.path
-                readinessHttpProbePort = probe?.port 
-                readinessInitialDelay = kubeContainer.readinessProbe?.initialDelaySeconds
-                readinessPeriod = kubeContainer.readinessProbe?.periodSeconds
+        /*-----------------------------------------------------------------------
+          readinessProbe:
+            timeoutSeconds: 3
+            initialDelaySeconds: 30
+            httpGet:
+              path: "/"
+              port: 8080   
 
-                def command = kubeContainer.readinessProbe.exec?.command
-                readinessCommand = command?.first()
-                if (command?.size() > 1) {
-                    logger WARNING, 'Only one readiness command is supported'
+          readinessProbe:
+            timeoutSeconds: 1
+            initialDelaySeconds: 30
+            tcpSocket:
+              port: 27017  
+ 
+          readinessProbe:
+            exec:
+            command:
+            - cat
+            - /tmp/healthy
+        ------------------------------------------------------------------------*/
+        if (kubeContainer.readinessProbe) { 
+            def hasProbe = true
+            if(kubeContainer.readinessProbe.exec?.command) {
+                container.mapping.with {
+                    def command = kubeContainer.readinessProbe.exec.command
+                    //readinessCommand = command?.first()
+                    //if (command?.size() > 1) {
+                    //    logger WARNING, 'Only one readiness command is supported'
+                    //}
+                    readinessCommand = new JsonBuilder(command).toString()
                 }
+            } else if( kubeContainer.readinessProbe.httpGet ) {
+                def probe = kubeContainer.readinessProbe.httpGet 
+                container.mapping.with {
+                    readinessHttpProbePath = probe?.path
+                    readinessHttpProbePort = probe?.port
+                 def probeHeaderSize = probe?.httpHeaders?.size()
+                    if (probeHeaderSize && probeHeaderSize > 1) {
+                        logger WARNING, 'Only one readiness header is supported, will take the first'
+                    }
+                    def header = probe?.httpHeaders?.first()
+                    readinessHttpProbeHttpHeaderName = header?.name
+                    readinessHttpProbeHttpHeaderValue = header?.value
+                }
+            } else if ( kubeContainer.readinessProbe.tcpSocket) {
+                def probe = kubeContainer.readinessProbe.tcpSocket 
+                container.mapping.with {
+                    readinessTcpProbePort = probe?.port
+                }
+            } else {
+                hasProbe = false
+            }
 
-                readinessFailureThreshold = kubeContainer.readinessProbe?.failureThreshold
-                if(!readinessFailureThreshold) {
-                    readinessFailureThreshold = 3
+            if(hasProbe) {
+                container.mapping.with {
+                    readinessInitialDelay = kubeContainer.readinessProbe?.initialDelaySeconds
+                    readinessPeriod = kubeContainer.readinessProbe?.periodSeconds
+                    readinessFailureThreshold = kubeContainer.readinessProbe?.failureThreshold
+                    readinessSuccessThreshold = kubeContainer.readinessProbe?.successThreshold
+                    readinessTimeoutSeconds = kubeContainer.readinessProbe?.timeoutSeconds
                 }
-                readinessSuccessThreshold = kubeContainer.readinessProbe?.successThreshold
-                if(!readinessSuccessThreshold) {
-                    readinessSuccessThreshold = 1
-                }
-                readinessTimeoutSeconds = kubeContainer.readinessProbe?.timeoutSeconds
-                if(!readinessTimeoutSeconds) {
-                    readinessTimeoutSeconds = 1
-                } 
-
-                def probeHeaderSize = probe?.httpHeaders?.size()
-                if (probeHeaderSize && probeHeaderSize > 1) {
-                    logger WARNING, 'Only one liveness header is supported, will take the first'
-                }
-                def header = probe?.httpHeaders?.first()
-                readinessHttpProbeHttpHeaderName = header?.name
-                readinessHttpProbeHttpHeaderValue = header?.value
             }
         }
+
         def resources = kubeContainer.resources
         container.container.cpuCount = parseCPU(resources?.requests?.cpu)
         container.container.memorySize = parseMemory(resources?.requests?.memory)
