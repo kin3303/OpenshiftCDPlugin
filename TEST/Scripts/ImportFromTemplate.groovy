@@ -811,22 +811,35 @@ public class ImportFromTemplate extends EFClient {
         parsedConfigList.each { object ->
             if (object.kind == KIND_ROUTE && object.spec?.to?.kind == KIND_SERVICE && object.spec?.to?.name == serviceName) {
                 if (route) {
-                    def routeName = object.metadata?.name
-                    logger WARNING, "Only one route per service is allowed in ElectricFlow. The route ${routeName} will not be added."
-                }
-                else {
-                    route = object
+                    def routerMap = [:] 
+                    if(object.metadata?.name) {
+                        routerMap["routeName"] =  object.metadata?.name
+                    }
+                    if(object.spec?.host) {
+                        routerMap["routeHostname"] =  object.spec?.host
+                    }
+                    if(object.spec?.path) {
+                        routerMap["routePath"] =  object.spec?.path
+                    }
+                    if( object.spec?.port?.targetPort) {
+                        routerMap["routeTargetPort"] =   object.spec?.port?.targetPort
+                    }
+                    
+                    def routerJson = JsonOutput.toJson(routerMap)
+                    if(mapping.additionalRouters) {
+                        mapping.additionalRouters += "\n" + routerJson
+                    } else {
+                        mapping.additionalRouters = routerJson
+                    }
+                } else {
+                    route = object 
+                    mapping.routeName = route.metadata?.name
+                    mapping.routeHostname = route.spec?.host
+                    mapping.routePath = route.spec?.path
+                    mapping.routeTargetPort = route.spec?.port?.targetPort
                 }
             }
         }
-
-        if (route) {
-            mapping.routeName = route.metadata?.name
-            mapping.routeHostname = route.spec?.host
-            mapping.routePath = route.spec?.path
-            mapping.routeTargetPort = route.spec?.port?.targetPort
-        }
-
         return mapping
     }
 
@@ -1031,7 +1044,8 @@ public class ImportFromTemplate extends EFClient {
                     //if (command?.size() > 1) {
                     //    logger WARNING, 'Only one liveness command is supported'
                     //}
-                    livenessCommand = new JsonBuilder(command).toString()
+                    livenessCommand = new JsonBuilder(command).toString() 
+                    
                 }
             } else if( kubeContainer.livenessProbe.httpGet ) {
                 def probe = kubeContainer.livenessProbe.httpGet 
@@ -1096,7 +1110,7 @@ public class ImportFromTemplate extends EFClient {
                     //if (command?.size() > 1) {
                     //    logger WARNING, 'Only one readiness command is supported'
                     //}
-                    readinessCommand = new JsonBuilder(command).toString()
+                    readinessCommand = new JsonBuilder(command).toString() 
                 }
             } else if( kubeContainer.readinessProbe.httpGet ) {
                 def probe = kubeContainer.readinessProbe.httpGet 

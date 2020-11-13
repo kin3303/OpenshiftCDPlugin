@@ -5,6 +5,7 @@
 minAvailabilityPercentage
 maxRunningPercentage
 deploymentStrategy
+additionalRouters
 
 
 ---------------------------------------------------------------------------------------------------------------------
@@ -170,6 +171,13 @@ ec_parameterForm
         <required>0</required>
         <documentation>Target port of the service to route the traffic.</documentation>
     </formElement>
+    <formElement>
+        <type>textarea</type>
+        <label>Multiple Routes</label>
+        <property>additionalRouters</property>
+        <required>0</required>
+        <documentation> If you want defining multiple routes, use json input with newlines. i.e {"routeName":"","routeHostname":"yourHost","routePath":"yourRoutePath","routeTargetPort":"yourPort"}</documentation>
+    </formElement>    
     <!--Route parameters end -->
     <formElement>
         <type>entry</type>
@@ -428,6 +436,13 @@ serviceMappingsForm
         <required>0</required>
         <documentation>Target port of the service to route the traffic.</documentation>
     </formElement>
+    <formElement>
+        <type>textarea</type>
+        <label>Multiple Routes</label>
+        <property>additionalRouters</property>
+        <required>0</required>
+        <documentation> If you want defining multiple routes, use json input with newlines. i.e {"routeName":"","routeHostname":"yourHost","routePath":"yourRoutePath","routeTargetPort":"yourPort"}</documentation>
+    </formElement>         
     <!--Route parameters end -->
 
     <!-- Additional resource section -->

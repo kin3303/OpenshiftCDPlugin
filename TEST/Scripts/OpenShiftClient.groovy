@@ -14,9 +14,11 @@ public class OpenShiftClient extends KubernetesClient {
 
     def createOrUpdateRoute(String clusterEndpoint, String namespace, def serviceDetails, String accessToken) {
         String routeName = getServiceParameter(serviceDetails, 'routeName')
+        String routeHostname = getServiceParameter(serviceDetails, 'routeHostname')
+        String routePath = getServiceParameter(serviceDetails, 'routePath', '/')
+        String routeTargetPort = getServiceParameter(serviceDetails, 'routeTargetPort')
 
-        if (!routeName) {
-            //bail out - not creating route if weren't asked to
+        if (!routeName) { 
             return null
         }
 
@@ -25,20 +27,44 @@ public class OpenShiftClient extends KubernetesClient {
                 accessToken, /*failOnErrorCode*/ false)
         if (response.status == 200){
             logger INFO, "Route $routeName found in $namespace, updating route ..."
-            createOrUpdateRoute(/*existingRoute*/ response.data, routeName, clusterEndpoint, namespace, serviceDetails, accessToken)
+            createOrUpdateRoute(/*existingRoute*/ response.data, routeName, routeHostname, routePath, routeTargetPort, clusterEndpoint, namespace, serviceDetails, accessToken)
         } else if (response.status == 404){
             logger INFO, "Route $routeName does not exist in $namespace, creating route ..."
-            createOrUpdateRoute(/*existingRoute*/ null, routeName, clusterEndpoint, namespace, serviceDetails, accessToken)
+            createOrUpdateRoute(/*existingRoute*/ null, routeName, routeHostname, routePath, routeTargetPort, clusterEndpoint, namespace, serviceDetails, accessToken)
         } else {
             handleError("Route check failed. ${response.statusLine}")
         }
+
+        String additionalRouters  = getServiceParameter(serviceDetails, 'additionalRouters')
+        if(additionalRouters) {
+            def additionalRouterList =  additionalRouters.trim().split('\n').collect{it as String}
+            additionalRouterList.each { routerInfo ->
+                def router = new JsonSlurper().parseText(routerInfo) 
+                if(router.routeName) {
+                    routeName = router.routeName
+                    routeHostname = router.routeHostname
+                    routePath = router.routePath
+                    routeTargetPort = router.routeTargetPort
+
+                    response = doHttpGet(clusterEndpoint,
+                        "/apis/route.openshift.io/v1/namespaces/${namespace}/routes/${routeName}",
+                        accessToken, /*failOnErrorCode*/ false)
+                        
+                    if (response.status == 200){
+                        logger INFO, "Route $routeName found in $namespace, updating route ..."
+                        createOrUpdateRoute(/*existingRoute*/ response.data, routeName, routeHostname, routePath, routeTargetPort, clusterEndpoint, namespace, serviceDetails, accessToken)
+                    } else if (response.status == 404){
+                        logger INFO, "Route $routeName does not exist in $namespace, creating route ..."
+                        createOrUpdateRoute(/*existingRoute*/ null, routeName, routeHostname, routePath, routeTargetPort, clusterEndpoint, namespace, serviceDetails, accessToken)
+                    } else {
+                        handleError("Route check failed. ${response.statusLine}")
+                    }
+                }
+            }
+        }
     }
 
-
-    def createOrUpdateRoute(def existingRoute, String routeName, String clusterEndpoint, String namespace, def serviceDetails, String accessToken) {
-        String routeHostname = getServiceParameter(serviceDetails, 'routeHostname')
-        String routePath = getServiceParameter(serviceDetails, 'routePath', '/')
-        String routeTargetPort = getServiceParameter(serviceDetails, 'routeTargetPort')
+    def createOrUpdateRoute(def existingRoute, String routeName,  String routeHostname, String routePath, String routeTargetPort, String clusterEndpoint, String namespace, def serviceDetails, String accessToken) {
 
         def payload = buildRoutePayload(routeName, routeHostname, routePath, routeTargetPort, serviceDetails, existingRoute)
 
@@ -66,7 +92,9 @@ public class OpenShiftClient extends KubernetesClient {
                 if (routeHostname) {
                     host routeHostname
                 }
-                path routePath
+                if (routePath) {
+                    path routePath
+                }
                 to {
                     kind "Service"
                     name serviceName
@@ -337,8 +365,15 @@ public class OpenShiftClient extends KubernetesClient {
                             def livenessPeriod = getServiceParameter(svcContainer, 'livenessPeriod')?.toInteger()
 
                             if(livenessCommand) {
-                                livenessProbe = [exec: [command:[:]]]
-                                livenessProbe.exec.command = ["${livenessCommand}"] 
+                                //livenessProbe = [exec: [command:[:]]]
+                                //livenessProbe.exec.command = ["${livenessCommand}"] 
+                                livenessProbe = [
+                                    exec: [
+                                        command:(parseJsonToList(livenessCommand)).collect { cmd ->
+                                            "${cmd}" 
+                                        }
+                                    ]
+                                ]
                             } else if(getServiceParameter(svcContainer, 'livenessHttpProbePath') && getServiceParameter(svcContainer, 'livenessHttpProbePort')){
                                 def httpHeaderName = getServiceParameter(svcContainer, 'livenessHttpProbeHttpHeaderName')
                                 def httpHeaderValue = getServiceParameter(svcContainer, 'livenessHttpProbeHttpHeaderValue')
@@ -389,8 +424,15 @@ public class OpenShiftClient extends KubernetesClient {
 
                             def readinessCommand = getServiceParameter(svcContainer, 'readinessCommand') 
                             if(readinessCommand) {
-                                readinessProbe = [exec: [command:[:]]]
-                                readinessProbe.exec.command = ["${readinessCommand}"] 
+                                //readinessProbe = [exec: [command:[:]]]
+                                //readinessProbe.exec.command = ["${readinessCommand}"]
+                                readinessProbe = [
+                                    exec: [
+                                        command:(parseJsonToList(readinessCommand)).collect { cmd ->
+                                            "${cmd}" 
+                                        }
+                                    ]
+                                ]
                             } else if(getServiceParameter(svcContainer, 'readinessHttpProbePath') && getServiceParameter(svcContainer, 'readinessHttpProbePort')){
                                 def httpHeaderName = getServiceParameter(svcContainer, 'readinessHttpProbeHttpHeaderName')
                                 def httpHeaderValue = getServiceParameter(svcContainer, 'readinessHttpProbeHttpHeaderValue')
