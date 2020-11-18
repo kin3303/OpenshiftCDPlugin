@@ -184,7 +184,7 @@ ec_parameterForm
         <label>Deployment Timeout (in seconds):</label>
         <property>deploymentTimeoutInSec</property>
         <required>0</required>
-        <value>120</value>
+        <value>240</value>
         <documentation>Number of seconds to wait for deployment to complete. If not complete within this period, deployment is marked as failed.</documentation>
     </formElement>
     <formElement>
@@ -373,7 +373,7 @@ serviceMappingsForm
         <label>Deployment Timeout (in seconds):</label>
         <property>deploymentTimeoutInSec</property>
         <required>0</required>
-        <value>120</value>
+        <value>240</value>
         <documentation>Number of seconds to wait for deployment to complete. If not complete within this period, deployment is marked as failed.</documentation>
     </formElement>
     <formElement>

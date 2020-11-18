@@ -200,6 +200,8 @@ public class OpenShiftClient extends KubernetesClient {
             def name = formatName(item.name)
             if(item.hostPath){
                 result << [name: name, hostPath: [path : item.hostPath]]
+            } else if (item.persistentVolumeClaim) {
+                 result << [name: name, persistentVolumeClaim: [claimName : item.persistentVolumeClaim]]
             } else {
                 result << [name: name, emptyDir: {}]
             }
@@ -294,8 +296,8 @@ public class OpenShiftClient extends KubernetesClient {
         def selectorLabel = getSelectorLabelForDeployment(args, serviceName, isCanary)
 
         String apiPath = versionSpecificAPIPath('deployments')
-        int deploymentTimeoutInSec = getServiceParameter(args, 'deploymentTimeoutInSec', 120).toInteger()
-
+        int deploymentTimeoutInSec = getServiceParameter(args, 'deploymentTimeoutInSec', 240).toInteger()
+        
         def deploymentFlag = isCanary ? 'canary' : 'stable'
 
         def result = json {
