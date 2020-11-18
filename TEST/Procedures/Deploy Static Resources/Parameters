@@ -1,6 +1,6 @@
 * 복사한 프로시저를 또 복사하면 Flow UI 에서 Parameter 가 안나타남
 
-*  Deploy Sattic Resouces 프로시저는 아래와 같이 파라미터를 남김 
+*  Deploy Static Resources 프로시저는 아래와 같이 파라미터를 남김 
     Import Microservices 프로시저 복사후 아래 항목을 남기면 됨
         clusterName
         envName
