@@ -106,4 +106,47 @@ public class OpenshiftClientEx extends KubernetesClient {
         return (new JsonBuilder(result)).toPrettyString()
     }
 
+    String checkExistingApplication(String clusterEndPoint, String namespace, String appName, String accessToken){
+		if ( checkRoute(clusterEndPoint,namespace,appName,accessToken) &&
+        checkDeployment(clusterEndPoint,namespace,appName,accessToken) &&
+        checkService(clusterEndPoint,namespace,appName,accessToken)) {
+            return "update" 
+        } else {
+            return "create"
+        }
+    }
+
+    def checkRoute(String clusterEndPoint, String namespace, String routeName, String accessToken) {
+        def response = doHttpGet(clusterEndPoint,
+                "/apis/route.openshift.io/v1/namespaces/${namespace}/routes/${routeName}",
+                accessToken, 
+                false)
+        response.status == 200 ? true : false
+    }
+
+    def checkDeployment(String clusterEndPoint, String namespace, String deploymentName, String accessToken) {
+        String apiPath = getDeploymentAPIPath('deployments')
+        def response = doHttpGet(clusterEndPoint,
+                "/apis/${apiPath}/namespaces/${namespace}/deployments/${deploymentName}",
+                accessToken,
+                false)
+        response.status == 200 ? true : false
+    }
+
+    def checkService(String clusterEndPoint, String namespace, String serviceName, String accessToken) {
+        def response = doHttpGet(clusterEndPoint,
+                "/api/v1/namespaces/${namespace}/services/${serviceName}",
+                accessToken, 
+                false) 
+        response.status == 200 ? true : false
+    }
+
+    String getDeploymentAPIPath(String resource) {
+        switch (resource) {
+            case 'deployments':
+                return isVersionGreaterThan15() ? ( isVersionGreaterThan17() ? 'apps/v1beta2' : 'apps/v1beta1'): 'extensions/v1beta1'
+            default:
+                handleError("Unsupported resource '$resource' for determining version specific API path")
+        }
+    }
 }

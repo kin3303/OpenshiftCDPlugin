@@ -104,6 +104,11 @@ $xpath = $ec->attachCredential($projName, $credName,
      stepName => "build"});
 $errors .= $ec->checkAllErrors($xpath);
 
+$xpath = $ec->attachCredential($projName, $credName,
+    {procedureName => "Check Application Status",
+     stepName => "check"});
+$errors .= $ec->checkAllErrors($xpath);
+
 if ("$errors" ne "") {
     # Cleanup the partially created configuration we just created
     $ec->deleteProperty($configPath);
