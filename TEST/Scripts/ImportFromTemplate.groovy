@@ -839,7 +839,21 @@ public class ImportFromTemplate extends EFClient {
                     mapping.routeHostname = route.spec?.host
                     mapping.routePath = route.spec?.path
                     mapping.routeTargetPort = route.spec?.port?.targetPort
-
+                    
+                    /*
+                    spec:
+                        to:
+                        - kind: Service
+                          name: service-name
+                    */
+                    if(route.spec?.to) {
+                        def to = [:]
+                        to.kind = "Service"
+                        to.name = route.spec.to?.name
+                        to.weight = route.spec.to?.weight
+                        mapping.to = new JsonBuilder(to).toString()
+                        logger INFO, "ROUTER_ALTERNATEBACKENDS : ${mapping.to} "
+                    }  
                     /*
                     spec:
                         alternateBackends:
