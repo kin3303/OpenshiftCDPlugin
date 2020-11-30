@@ -736,7 +736,7 @@ public class ImportFromTemplate extends EFClient {
               persistentVolumeClaim:
                 claimName: "${DATABASE_SERVICE_NAME}"
         -------------------------------------------------------------------*/
-        if (deployment.spec.template.spec.volumes) {
+        if (deployment.spec.template.spec?.volumes) {
             def index = 0
             def volumes = deployment.spec.template.spec.volumes.collect { volume ->
                 def retval = [name: volume.name]
@@ -811,6 +811,7 @@ public class ImportFromTemplate extends EFClient {
         parsedConfigList.each { object ->
             if (object.kind == KIND_ROUTE && object.spec?.to?.kind == KIND_SERVICE && object.spec?.to?.name == serviceName) {
                 if (route) {
+                    /*
                     def routerMap = [:] 
                     if(object.metadata?.name) {
                         routerMap["routeName"] =  object.metadata?.name
@@ -831,12 +832,36 @@ public class ImportFromTemplate extends EFClient {
                     } else {
                         mapping.additionalRouters = routerJson
                     }
+                    */
                 } else {
                     route = object 
                     mapping.routeName = route.metadata?.name
                     mapping.routeHostname = route.spec?.host
                     mapping.routePath = route.spec?.path
                     mapping.routeTargetPort = route.spec?.port?.targetPort
+
+                    /*
+                    spec:
+                        alternateBackends:
+                        - kind: Service
+                          name: service-name2 
+                          weight: 10          
+                        - kind: Service
+                          name: service-name3 
+                          weight: 10   
+
+                    */
+                    if(route.spec?.alternateBackends) {
+                        def backends = route.spec.alternateBackends.collect { backend ->
+                            def retval = [:]
+                            retval.kind = "Service"
+                            retval.name = backend.name
+                            retval.weight = backend.weight
+                            retval
+                        }
+                        mapping.alternateBackends = new JsonBuilder(backends).toString()
+                        logger INFO, "ROUTER_ALTERNATEBACKENDS : ${mapping.alternateBackends} "
+                    }         
                 }
             }
         }

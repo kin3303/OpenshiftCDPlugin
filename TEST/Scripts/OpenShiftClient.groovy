@@ -17,6 +17,7 @@ public class OpenShiftClient extends KubernetesClient {
         String routeHostname = getServiceParameter(serviceDetails, 'routeHostname')
         String routePath = getServiceParameter(serviceDetails, 'routePath', '/')
         String routeTargetPort = getServiceParameter(serviceDetails, 'routeTargetPort')
+        String alternateBackends  = getServiceParameter(serviceDetails, 'alternateBackends')
 
         if (!routeName) { 
             return null
@@ -27,14 +28,15 @@ public class OpenShiftClient extends KubernetesClient {
                 accessToken, /*failOnErrorCode*/ false)
         if (response.status == 200){
             logger INFO, "Route $routeName found in $namespace, updating route ..."
-            createOrUpdateRoute(/*existingRoute*/ response.data, routeName, routeHostname, routePath, routeTargetPort, clusterEndpoint, namespace, serviceDetails, accessToken)
+            createOrUpdateRoute(/*existingRoute*/ response.data, routeName, routeHostname, routePath, routeTargetPort, alternateBackends, clusterEndpoint, namespace, serviceDetails, accessToken)
         } else if (response.status == 404){
             logger INFO, "Route $routeName does not exist in $namespace, creating route ..."
-            createOrUpdateRoute(/*existingRoute*/ null, routeName, routeHostname, routePath, routeTargetPort, clusterEndpoint, namespace, serviceDetails, accessToken)
+            createOrUpdateRoute(/*existingRoute*/ null, routeName, routeHostname, routePath, routeTargetPort, alternateBackends, clusterEndpoint, namespace, serviceDetails, accessToken)
         } else {
             handleError("Route check failed. ${response.statusLine}")
         }
 
+        /*
         String additionalRouters  = getServiceParameter(serviceDetails, 'additionalRouters')
         if(additionalRouters) {
             def additionalRouterList =  additionalRouters.trim().split('\n').collect{it as String}
@@ -48,25 +50,27 @@ public class OpenShiftClient extends KubernetesClient {
 
                     response = doHttpGet(clusterEndpoint,
                         "/apis/route.openshift.io/v1/namespaces/${namespace}/routes/${routeName}",
-                        accessToken, /*failOnErrorCode*/ false)
+                        accessToken, false)
                         
                     if (response.status == 200){
                         logger INFO, "Route $routeName found in $namespace, updating route ..."
-                        createOrUpdateRoute(/*existingRoute*/ response.data, routeName, routeHostname, routePath, routeTargetPort, clusterEndpoint, namespace, serviceDetails, accessToken)
+                        createOrUpdateRoute(response.data, routeName, routeHostname, routePath, routeTargetPort, clusterEndpoint, namespace, serviceDetails, accessToken)
                     } else if (response.status == 404){
                         logger INFO, "Route $routeName does not exist in $namespace, creating route ..."
-                        createOrUpdateRoute(/*existingRoute*/ null, routeName, routeHostname, routePath, routeTargetPort, clusterEndpoint, namespace, serviceDetails, accessToken)
+                        createOrUpdateRoute( null, routeName, routeHostname, routePath, routeTargetPort, clusterEndpoint, namespace, serviceDetails, accessToken)
                     } else {
                         handleError("Route check failed. ${response.statusLine}")
                     }
                 }
             }
         }
+        */
     }
 
-    def createOrUpdateRoute(def existingRoute, String routeName,  String routeHostname, String routePath, String routeTargetPort, String clusterEndpoint, String namespace, def serviceDetails, String accessToken) {
 
-        def payload = buildRoutePayload(routeName, routeHostname, routePath, routeTargetPort, serviceDetails, existingRoute)
+    def createOrUpdateRoute(def existingRoute, String routeName,  String routeHostname, String routePath, String routeTargetPort, String alternateBackends, String clusterEndpoint, String namespace, def serviceDetails, String accessToken) {
+
+        def payload = buildRoutePayload(routeName, routeHostname, routePath, routeTargetPort, alternateBackends, serviceDetails, existingRoute)
 
         def createRoute = existingRoute == null
         doHttpRequest(createRoute ? POST : PUT,
@@ -79,8 +83,9 @@ public class OpenShiftClient extends KubernetesClient {
                 payload)
     }
 
-    String buildRoutePayload(String routeName, String routeHostname, String routePath, String routeTargetPort, def serviceDetails, def existingRoute) {
+    String buildRoutePayload(String routeName, String routeHostname, String routePath, String routeTargetPort, String alternateBackendStr, def serviceDetails, def existingRoute) {
         def serviceName = getServiceNameToUseForDeployment(serviceDetails)
+ 
         def json = new JsonBuilder()
         def result = json{
             kind "Route"
@@ -103,6 +108,9 @@ public class OpenShiftClient extends KubernetesClient {
                     port {
                         targetPort routeTargetPort
                     }
+                }
+                if(alternateBackendStr && alternateBackendStr != "") {
+                    alternateBackends new JsonSlurper().parseText(alternateBackendStr)
                 }
             }
         }

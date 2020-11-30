@@ -5,8 +5,7 @@
 minAvailabilityPercentage
 maxRunningPercentage
 deploymentStrategy
-additionalRouters
-
+alternateBackends
 
 ---------------------------------------------------------------------------------------------------------------------
 ec_parameterForm
@@ -173,10 +172,10 @@ ec_parameterForm
     </formElement>
     <formElement>
         <type>textarea</type>
-        <label>Multiple Routes</label>
-        <property>additionalRouters</property>
+        <label>Alternate Backends</label>
+        <property>alternateBackends</property>
         <required>0</required>
-        <documentation> If you want defining multiple routes, use json input with newlines. i.e {"routeName":"","routeHostname":"yourHost","routePath":"yourRoutePath","routeTargetPort":"yourPort"}</documentation>
+        <documentation></documentation>
     </formElement>    
     <!--Route parameters end -->
     <formElement>
@@ -438,10 +437,10 @@ serviceMappingsForm
     </formElement>
     <formElement>
         <type>textarea</type>
-        <label>Multiple Routes</label>
-        <property>additionalRouters</property>
+        <label>Alternate Backends</label>
+        <property>alternateBackends</property>
         <required>0</required>
-        <documentation> If you want defining multiple routes, use json input with newlines. i.e {"routeName":"","routeHostname":"yourHost","routePath":"yourRoutePath","routeTargetPort":"yourPort"}</documentation>
+        <documentation></documentation>
     </formElement>         
     <!--Route parameters end -->
 
