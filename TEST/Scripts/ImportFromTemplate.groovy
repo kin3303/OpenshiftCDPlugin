@@ -839,7 +839,8 @@ public class ImportFromTemplate extends EFClient {
                     mapping.routeHostname = route.spec?.host
                     mapping.routePath = route.spec?.path
                     mapping.routeTargetPort = route.spec?.port?.targetPort
-                    
+                    mapping.wildcardPolicy = route.spec?.wildcardPolicy
+
                     /*
                     spec:
                         to:

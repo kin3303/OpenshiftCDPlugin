@@ -5,6 +5,7 @@
 minAvailabilityPercentage
 maxRunningPercentage
 deploymentStrategy
+wildcardPolicy
 to
 alternateBackends
 
@@ -171,6 +172,13 @@ ec_parameterForm
         <required>0</required>
         <documentation>Target port of the service to route the traffic.</documentation>
     </formElement>
+    <formElement>
+        <type>textarea</type>
+        <label>WildcardPolicy</label>
+        <property>wildcardPolicy</property>
+        <required>0</required>
+        <documentation></documentation>
+    </formElement>      
     <formElement>
         <type>textarea</type>
         <label>To</label>
@@ -443,6 +451,13 @@ serviceMappingsForm
         <required>0</required>
         <documentation>Target port of the service to route the traffic.</documentation>
     </formElement>
+    <formElement>
+        <type>textarea</type>
+        <label>WildcardPolicy</label>
+        <property>wildcardPolicy</property>
+        <required>0</required>
+        <documentation></documentation>
+    </formElement>       
     <formElement>
         <type>textarea</type>
         <label>To</label>
