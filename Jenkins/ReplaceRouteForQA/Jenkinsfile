@@ -40,8 +40,6 @@ pipeline {
                                     }
                                     openshift.selector("svc/${obj}").delete( '--ignore-not-found' )
                                 }
-
-
                             }
 						}
                     }
